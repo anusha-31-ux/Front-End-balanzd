@@ -1,0 +1,118 @@
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+export interface PaymentParams {
+  amount: number;
+  planName: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  instagramId:string;
+  health:string;
+  goal:string;
+}
+
+const loadRazorpayScript = () => {
+  return new Promise<boolean>((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+
+    document.body.appendChild(script);
+  });
+};
+
+export const useRazorpay = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const initiatePayment = async ({
+    amount,
+    planName,
+    customerName,
+    customerEmail,
+    customerPhone,
+    instagramId,
+    health,
+    goal
+  }: PaymentParams) => {
+    try {
+      setIsLoading(true);
+
+      // ✅ Load Razorpay script
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        toast.error("Razorpay SDK failed to load");
+        return;
+      }
+
+      // ✅ Create order
+      const { data } = await axios.post(
+        "https://balanzd-api.onrender.com/api/payments/create-order",
+        {
+          amount,
+          planName,
+          customerName,
+          customerEmail,
+          customerPhone,
+          instagramId,
+          health,
+          goal
+        }
+      );
+
+      // ✅ Open Razorpay Checkout
+      const razorpay = new window.Razorpay({
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Balanzed Fitness",
+        description: planName,
+        order_id: data.orderId,
+        prefill: {
+          name: customerName,
+          email: customerEmail,
+          contact: customerPhone,
+          instagramId: instagramId,
+          health : health,
+          goal: goal,
+        },
+        theme: {
+          color: "#E53935",
+        },
+        handler: function (response: any) {
+          console.log("Payment Success:", response);
+          toast.success("Payment successful 🎉");
+        },
+        modal: {
+          ondismiss: function () {
+            toast.info("Payment cancelled");
+          },
+        },
+      });
+
+      razorpay.open();
+    } catch (err) {
+      console.error("Razorpay Error:", err);
+      toast.error("Payment failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { initiatePayment, isLoading };
+};

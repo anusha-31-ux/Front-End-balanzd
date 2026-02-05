@@ -15,6 +15,13 @@ const TermsConditions = lazy(() => import("./pages/TermsConditions"));
 const PrizeChallengePolicy = lazy(() => import("./pages/PrizeChallengePolicy"));
 const ProgramPolicy = lazy(() => import("./pages/ProgramPolicy"));
 
+// Lazy load admin pages
+const AdminPortal = lazy(() => import("./admin/AdminPortal"));
+const AdminDashboard = lazy(() => import("./admin/pages/Dashboard"));
+const AdminPricing = lazy(() => import("./admin/pages/Pricing"));
+const AdminTestimonials = lazy(() => import("./admin/pages/Testimonials"));
+const AdminRazorpay = lazy(() => import("./admin/pages/Razorpay"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -28,6 +35,11 @@ const App = () => (
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/login/admin-portal" element={<AdminPortal />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/pricing" element={<AdminPricing />} />
+            <Route path="/admin/testimonials" element={<AdminTestimonials />} />
+            <Route path="/admin/razorpay" element={<AdminRazorpay />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />

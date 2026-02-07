@@ -60,6 +60,14 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
+            {/* Admin Link */}
+            <a
+              href="/admin/pricing"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-300 uppercase tracking-wider"
+              title="Manage pricing plans"
+            >
+              ⚙️ Admin
+            </a>
           </div>
 
           {/* CTA Button */}
@@ -105,6 +113,14 @@ const Navbar = () => {
                   {link.label}
                 </a>
               ))}
+              {/* Admin Link Mobile */}
+              <a
+                href="/admin/pricing"
+                className="px-4 py-2 text-foreground hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                ⚙️ Admin
+              </a>
               {/* <div className="px-4 pt-4">
                 <Button variant="hero" size="lg" className="w-full">
                   Join Now

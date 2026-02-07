@@ -15,9 +15,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { pricingService } from "@/services/pricingService";
 import { PricingPlan, CreatePricingPlanInput } from "@/types/pricing";
-import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export const PricingManagement = () => {
@@ -29,6 +39,10 @@ export const PricingManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [featureInput, setFeatureInput] = useState("");
+
+  // State for delete confirmation dialog
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Form data state
   const [formData, setFormData] = useState<Partial<CreatePricingPlanInput>>({
@@ -170,33 +184,51 @@ export const PricingManagement = () => {
   };
 
   /**
+   * Open delete confirmation dialog
+   */
+  const handleDeletePlanClick = (id: string, duration: string) => {
+    setPlanToDelete({ id, name: duration });
+    setShowDeleteDialog(true);
+  };
+
+  /**
    * Delete a plan after confirmation
    */
-  const handleDeletePlan = async (id: string) => {
-    if (confirm("Are you sure you want to delete this plan?")) {
-      try {
-        await pricingService.deletePlan(id);
-        toast.success("Plan deleted successfully");
-        loadPlans();
-      } catch (error) {
-        toast.error("Failed to delete plan");
-        console.error(error);
-      }
+  const handleDeletePlan = async () => {
+    if (!planToDelete) return;
+    
+    try {
+      await pricingService.deletePlan(planToDelete.id);
+      toast.success("Plan deleted successfully");
+      loadPlans();
+      setShowDeleteDialog(false);
+      setPlanToDelete(null);
+    } catch (error) {
+      toast.error("Failed to delete plan");
+      console.error(error);
     }
   };
 
+  /**
+   * Cancel delete operation
+   */
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setPlanToDelete(null);
+  };
+
   if (loading) {
-    return <div className="p-6 text-center">Loading plans...</div>;
+    return <div className="text-center">Loading plans...</div>;
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
+    <div className="space-y-6 bg-background min-h-screen">
       {/* Header with Add Plan Button */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Pricing Plans Management</h1>
+          <h1 className="text-3xl font-bold">Pricing Management</h1>
           <p className="text-muted-foreground mt-1">
-            Manage your fitness program pricing plans
+            Manage and update pricing plans for your programs.
           </p>
         </div>
         <Button onClick={handleAddPlan} className="gap-2" size="lg">
@@ -233,15 +265,15 @@ export const PricingManagement = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEditPlan(plan)}
-                    className="text-primary hover:bg-primary/10"
+                    className="text-primary hover:bg-primary/30"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeletePlan(plan.id)}
-                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDeletePlanClick(plan.id, plan.duration)}
+                    className="text-destructive hover:bg-destructive/30"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -600,6 +632,35 @@ export const PricingManagement = () => {
           </Card>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Pricing Plan
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left">
+              Are you sure you want to delete the <strong>"{planToDelete?.name}"</strong> pricing plan? 
+              <br />
+              <br />
+              This action cannot be undone and will permanently remove all data associated with this plan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:gap-2">
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePlan}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Plan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

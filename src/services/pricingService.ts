@@ -1,130 +1,43 @@
 /**
  * Pricing Service
  * Manages all pricing plan operations (Create, Read, Update, Delete)
- * Currently uses dummy data - will be replaced with API calls in the future
+ * Integrates with backend API at http://localhost:5000
  */
 
-import { PricingPlan, CreatePricingPlanInput, UpdatePricingPlanInput } from "@/types/pricing";
+import { PricingPlan, CreatePricingPlanInput, UpdatePricingPlanInput, ApiResponse } from "@/types/pricing";
 
-// Dummy data - stored in memory. Later replace with API calls to your backend
-const dummyPlans: PricingPlan[] = [
-  {
-    id: "plan_1",
-    duration: "1 Month",
-    durationMonths: 1,
-    badge: null,
-    showPrize: false,
-    prizeText: "",
-    prizeNote: "",
-    actualPrice: 699,
-    offerPrice: 589,
-    offerText: "January Launch Offer",
-    offerValidity: "Offer valid till 31st January",
-    features: [
-      "Daily LIVE Workout Sessions",
-      "10 Flexible Batches Daily",
-      "Strength Training & Yoga Sessions",
-      "Home-Based Beginner Friendly Workouts",
-      "Basic Nutrition Guidance",
-      "Community Support",
-      "Access to Private Community Page",
-    ],
-    tagline: "Perfect for beginners to start their fitness journey.",
-    displayOrder: 1,
-    isActive: true,
-  },
-  {
-    id: "plan_2",
-    duration: "3 Months",
-    durationMonths: 3,
-    badge: null,
-    showPrize: false,
-    prizeText: "",
-    prizeNote: "",
-    actualPrice: 2097,
-    offerPrice: 1533,
-    offerText: "January Launch Offer",
-    offerValidity: "Offer valid till 31st January",
-    features: [
-      "Daily LIVE Workout Sessions",
-      "10 Flexible Batches Daily",
-      "Strength Training & Yoga Sessions",
-      "Home-Based, Beginner Friendly Workouts",
-      "Balanced Nutrition Guidance",
-      "Easy Cooking & Recipe Videos",
-      "Educational Health Talks",
-      "Community Support",
-      "Access to Private Community Page",
-    ],
-    tagline: "Ideal for building consistency & seeing visible lifestyle improvement.",
-    displayOrder: 2,
-    isActive: true,
-  },
-  {
-    id: "plan_3",
-    duration: "6 Months",
-    durationMonths: 6,
-    badge: "MOST POPULAR",
-    showPrize: true,
-    prizeText: "Eligible for ₹3,00,000 Cash Prize*",
-    prizeNote: "(*Details mentioned in Challenge Policy)",
-    actualPrice: 4194,
-    offerPrice: 2949,
-    offerText: "January Launch Offer",
-    offerValidity: "Offer valid till 31st January",
-    features: [
-      "Daily LIVE Workout Sessions",
-      "10 Flexible Batches Daily (Morning & Evening)",
-      "Strength Training (Mon, Wed, Fri)",
-      "Yoga Sessions (Tue, Thu)",
-      "Completely Home-Based Workouts",
-      "Beginner Friendly – All Levels Welcome",
-      "Balanced Nutrition Guidance",
-      "Easy Cooking & Recipe Videos",
-      "Educational Health Talks & Workshops",
-      "Community Support & Accountability",
-      "Access to Private Balanzed Community Page",
-      "Habit-Building Focus (not just weight loss)",
-      "24/7 Personal Health Coach",
-      "Customized Meal Prep Plans",
-      "Monthly Physical Assessment",
-      "Exclusive Merch Pack",
-    ],
-    tagline: "Best plan for long-term lifestyle change & consistency.",
-    displayOrder: 3,
-    isActive: true,
-  },
-  {
-    id: "plan_4",
-    duration: "Yearly Plan",
-    durationMonths: 12,
-    badge: "ELITE PRO",
-    showPrize: false,
-    prizeText: "",
-    prizeNote: "",
-    actualPrice: 9099,
-    offerPrice: 4999,
-    offerText: "Special Annual Deal",
-    offerValidity: "Limited time offer",
-    features: [
-      "Everything in 6 Months, plus:",
-      "24/7 Personal Health Coach",
-      "Customized Meal Prep Plans",
-      "Monthly Physical Assessment",
-      "Exclusive Merch Pack",
-      "Priority Support",
-      "One-on-One Coaching Sessions (Weekly)",
-      "Exclusive Access to Premium Content",
-      "Annual Fitness Retreat Invitation",
-    ],
-    tagline: "Premium plan for complete transformation & long-term results.",
-    displayOrder: 4,
-    isActive: true,
-  },
-];
+// Backend API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_ENDPOINT = `${API_BASE_URL}/api/pricing/plans`;
 
-// Simulate API delay (to mimic real API calls)
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Generic fetch wrapper with error handling
+ */
+async function fetchApi<T>(
+  url: string,
+  options?: RequestInit
+): Promise<ApiResponse<T>> {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+
+    const data: ApiResponse<T> = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
+}
 
 /**
  * Pricing Service Object
@@ -132,87 +45,156 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export const pricingService = {
   /**
-   * Get all active plans sorted by display order
+   * Get all active plans sorted by display order (PUBLIC)
+   * @returns Array of active pricing plans
    */
   async getPlans(): Promise<PricingPlan[]> {
-    await delay(500);
-    return dummyPlans
-      .filter((plan) => plan.isActive)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+    try {
+      const response = await fetchApi<PricingPlan[]>(API_ENDPOINT);
+      
+      if (response.success && response.data) {
+        // Filter active plans and sort by display order
+        return response.data
+          .filter((plan) => plan.isActive)
+          .sort((a, b) => a.displayOrder - b.displayOrder);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      throw new Error("Failed to fetch pricing plans");
+    }
   },
 
   /**
-   * Get all plans including inactive ones (for admin view)
+   * Get all plans including inactive ones (ADMIN)
+   * @returns Array of all pricing plans
    */
   async getAllPlans(): Promise<PricingPlan[]> {
-    await delay(500);
-    return dummyPlans.sort((a, b) => a.displayOrder - b.displayOrder);
+    try {
+      const response = await fetchApi<PricingPlan[]>(`${API_ENDPOINT}?includeInactive=true`);
+      
+      if (response.success && response.data) {
+        // Sort by display order
+        return response.data.sort((a, b) => a.displayOrder - b.displayOrder);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("Error fetching all plans:", error);
+      throw new Error("Failed to fetch all pricing plans");
+    }
   },
 
   /**
-   * Get a single plan by ID
+   * Get a single plan by ID (PUBLIC)
+   * @param id - Plan ID
+   * @returns Single pricing plan or null if not found
    */
   async getPlan(id: string): Promise<PricingPlan | null> {
-    await delay(300);
-    return dummyPlans.find((plan) => plan.id === id) || null;
+    try {
+      const response = await fetchApi<PricingPlan>(`${API_ENDPOINT}/${id}`);
+      
+      if (response.success && response.data) {
+        return response.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error fetching plan ${id}:`, error);
+      return null;
+    }
   },
 
   /**
-   * Create a new pricing plan
+   * Create a new pricing plan (ADMIN)
    * @param data - Plan details
    * @returns Created plan with generated ID
    */
   async createPlan(data: CreatePricingPlanInput): Promise<PricingPlan> {
-    await delay(500);
-    const newPlan: PricingPlan = {
-      id: `plan_${Date.now()}`,
-      ...data,
-    };
-    dummyPlans.push(newPlan);
-    return newPlan;
+    try {
+      const response = await fetchApi<PricingPlan>(API_ENDPOINT, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      throw new Error(response.message || "Failed to create plan");
+    } catch (error) {
+      console.error("Error creating plan:", error);
+      throw error;
+    }
   },
 
   /**
-   * Update an existing pricing plan
+   * Update an existing pricing plan (ADMIN)
    * @param data - Updated plan data (must include id)
    * @returns Updated plan
    */
   async updatePlan(data: UpdatePricingPlanInput): Promise<PricingPlan> {
-    await delay(500);
-    const index = dummyPlans.findIndex((plan) => plan.id === data.id);
-    if (index === -1) {
-      throw new Error("Plan not found");
+    try {
+      const { id, ...updateData } = data;
+      
+      const response = await fetchApi<PricingPlan>(`${API_ENDPOINT}/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(updateData),
+      });
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      throw new Error(response.message || "Failed to update plan");
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      throw error;
     }
-    const updatedPlan = { ...dummyPlans[index], ...data };
-    dummyPlans[index] = updatedPlan;
-    return updatedPlan;
   },
 
   /**
-   * Delete a pricing plan
+   * Delete a pricing plan (ADMIN)
    * @param id - Plan ID to delete
    */
   async deletePlan(id: string): Promise<void> {
-    await delay(500);
-    const index = dummyPlans.findIndex((plan) => plan.id === id);
-    if (index === -1) {
-      throw new Error("Plan not found");
+    try {
+      const response = await fetchApi<void>(`${API_ENDPOINT}/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to delete plan");
+      }
+    } catch (error) {
+      console.error("Error deleting plan:", error);
+      throw error;
     }
-    dummyPlans.splice(index, 1);
   },
 
   /**
-   * Reorder plans for display
-   * @param planIds - Array of plan IDs in desired order
+   * Toggle active status of a pricing plan (ADMIN)
+   * @param id - Plan ID
+   * @returns Updated plan with new status
    */
-  async reorderPlans(planIds: string[]): Promise<PricingPlan[]> {
-    await delay(500);
-    planIds.forEach((id, index) => {
-      const plan = dummyPlans.find((p) => p.id === id);
-      if (plan) {
-        plan.displayOrder = index + 1;
+  async togglePlanStatus(id: string): Promise<{ id: string; isActive: boolean }> {
+    try {
+      const response = await fetchApi<{ id: string; isActive: boolean }>(
+        `${API_ENDPOINT}/${id}/toggle-status`,
+        {
+          method: "PATCH",
+        }
+      );
+
+      if (response.success && response.data) {
+        return response.data;
       }
-    });
-    return dummyPlans.sort((a, b) => a.displayOrder - b.displayOrder);
+
+      throw new Error(response.message || "Failed to toggle plan status");
+    } catch (error) {
+      console.error("Error toggling plan status:", error);
+      throw error;
+    }
   },
 };

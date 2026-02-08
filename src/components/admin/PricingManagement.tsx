@@ -76,8 +76,10 @@ export const PricingManagement = () => {
       const data = await pricingService.getAllPlans();
       setPlans(data);
     } catch (error) {
-      toast.error("Failed to load plans");
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load plans";
+      toast.error(errorMessage);
+      console.error("Error loading plans:", error);
+      setPlans([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -144,22 +146,32 @@ export const PricingManagement = () => {
     try {
       // Validate required fields
       if (!formData.duration || !formData.tagline) {
-        toast.error("Please fill all required fields");
+        toast.error("Please fill all required fields (Duration and Tagline)");
+        return;
+      }
+
+      if (!formData.features || formData.features.length === 0) {
+        toast.error("Please add at least one feature");
+        return;
+      }
+
+      if (!formData.actualPrice || !formData.offerPrice) {
+        toast.error("Please enter both actual price and offer price");
         return;
       }
 
       const submitData = {
         duration: formData.duration,
         durationMonths: formData.durationMonths || 1,
-        badge: formData.badge || null,
-        showPrize: formData.showPrize || false,
-        prizeText: formData.prizeText || "",
-        prizeNote: formData.prizeNote || "",
-        actualPrice: formData.actualPrice || 0,
-        offerPrice: formData.offerPrice || 0,
-        offerText: formData.offerText || "",
-        offerValidity: formData.offerValidity || "",
-        features: formData.features || [],
+        badge: formData.badge || undefined,
+        showPrize: formData.showPrize === true, // Always send as boolean
+        prizeText: formData.showPrize ? (formData.prizeText || "") : "",
+        prizeNote: formData.showPrize ? (formData.prizeNote || "") : "",
+        actualPrice: formData.actualPrice,
+        offerPrice: formData.offerPrice,
+        offerText: formData.offerText || undefined,
+        offerValidity: formData.offerValidity || undefined,
+        features: formData.features,
         tagline: formData.tagline,
         displayOrder: formData.displayOrder || plans.length + 1,
         isActive: formData.isActive !== false,
@@ -178,8 +190,9 @@ export const PricingManagement = () => {
       setShowForm(false);
       loadPlans();
     } catch (error) {
-      toast.error("Failed to save plan");
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to save plan";
+      toast.error(errorMessage);
+      console.error("Error saving plan:", error);
     }
   };
 
@@ -215,6 +228,20 @@ export const PricingManagement = () => {
   const handleCancelDelete = () => {
     setShowDeleteDialog(false);
     setPlanToDelete(null);
+  };
+
+  /**
+   * Toggle active status of a plan
+   */
+  const handleToggleStatus = async (id: string) => {
+    try {
+      await pricingService.togglePlanStatus(id);
+      toast.success("Plan status updated successfully");
+      loadPlans();
+    } catch (error) {
+      toast.error("Failed to update plan status");
+      console.error(error);
+    }
   };
 
   if (loading) {
@@ -303,6 +330,22 @@ export const PricingManagement = () => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Display Order:</span>
                   <span className="font-semibold">{plan.displayOrder}</span>
+                </div>
+              </div>
+
+              {/* Toggle Active Status */}
+              <div className="border-t border-border pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Active Status:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium">
+                      {plan.isActive ? "Active" : "Inactive"}
+                    </span>
+                    <Switch
+                      checked={plan.isActive}
+                      onCheckedChange={() => handleToggleStatus(plan.id)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -598,7 +641,7 @@ export const PricingManagement = () => {
               {/* ===== DISPLAY ORDER SECTION ===== */}
               <div className="space-y-3 border-b border-border pb-4">
                 <Label htmlFor="displayOrder" className="text-sm font-semibold">
-                  Display Order (1 = First, 2 = Second, etc.)
+                  Display Order (1 = First, 2 = Second, 3 = Third, etc.)
                 </Label>
                 <Input
                   id="displayOrder"

@@ -1,120 +1,85 @@
 import { Button } from "@/components/ui/button";
-import { Check, Trophy, Clock, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Check, Trophy, Clock, Sparkles, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
-
+import { pricingService } from "@/services/pricingService";
+import { PricingPlan } from "@/types/pricing";
 
 /**
  * Pricing Section Component
- * Displays membership plans with tab navigation and collects user info for Razorpay
+ * Displays membership plans dynamically from the pricing service
+ * Admin can edit plans from the admin panel, changes reflect automatically here
  */
 const Pricing = () => {
-  const [activeTab, setActiveTab] = useState<"1month" | "3months" | "6months">("6months");
-  const { initiatePayment, isLoading } = useRazorpay();
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const [detailsPlan, setDetailsPlan] = useState<PricingPlan | null>(null);
+  const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay();
 
   // User input state
   const [showModal, setShowModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [instagramId, setInstagramId] = useState("");
-  const [health , setHealth ] = useState("");
-  const [goal , setGoal ] = useState("");
-   
+  const [health, setHealth] = useState("");
+  const [goal, setGoal] = useState("");
 
+  // Load plans on component mount
+  useEffect(() => {
+    loadPlans();
+  }, []);
 
-  const plans = {
-    "6months": {
-      duration: "6 Months",
-      badge: "BEST VALUE",
-      showPrize: true,
-      prizeText: "Eligible for ₹3,00,000 Cash Prize*",
-      prizeNote: "(*Details mentioned in Challenge Policy)",
-      actualPrice: "₹4,194",
-      offerPrice: "₹2,949",
-      amount: 2949,
-      offerText: "January Launch Offer",
-      offerValidity: "Offer valid till 31st January",
-      features: [
-        "Daily LIVE Workout Sessions",
-        "10 Flexible Batches Daily (Morning & Evening)",
-        "Strength Training (Mon, Wed, Fri)",
-        "Yoga Sessions (Tue, Thu)",
-        "Completely Home-Based Workouts",
-        "Beginner Friendly – All Levels Welcome",
-        "Balanced Nutrition Guidance",
-        "Easy Cooking & Recipe Videos",
-        "Educational Health Talks & Workshops",
-        "Community Support & Accountability",
-        "Access to Private Balanzed Community Page",
-        "Habit-Building Focus (not just weight loss)",
-      ],
-      tagline: "Best plan for long-term lifestyle change & consistency.",
-    },
-    "3months": {
-      duration: "3 Months",
-      badge: null,
-      showPrize: false,
-      prizeText: "",
-      prizeNote: "",
-      actualPrice: "₹2,097",
-      offerPrice: "₹1,533",
-      amount: 1533,
-      offerText: "January Launch Offer",
-      offerValidity: "Offer valid till 31st January",
-      features: [
-        "Daily LIVE Workout Sessions",
-        "10 Flexible Batches Daily",
-        "Strength Training & Yoga Sessions",
-        "Home-Based, Beginner Friendly Workouts",
-        "Balanced Nutrition Guidance",
-        "Easy Cooking & Recipe Videos",
-        "Educational Health Talks",
-        "Community Support",
-        "Access to Private Community Page",
-      ],
-      tagline: "Ideal for building consistency & seeing visible lifestyle improvement.",
-    },
-    "1month": {
-      duration: "1 Month",
-      badge: null,
-      showPrize: false,
-      prizeText: "",
-      prizeNote: "",
-      actualPrice: "₹699",
-      offerPrice: "₹589",
-      amount: 589,
-      offerText: "January Launch Offer",
-      offerValidity: "Offer valid till 31st January",
-      features: [
-        "Daily LIVE Workout Sessions",
-        "10 Flexible Batches Daily",
-        "Strength Training & Yoga Sessions",
-        "Home-Based Beginner Friendly Workouts",
-        "Basic Nutrition Guidance",
-        "Community Support",
-        "Access to Private Community Page",
-      ],
-      tagline: "Perfect for beginners to start their fitness journey.",
-    },
+  /**
+   * Load pricing plans from the service
+   */
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const data = await pricingService.getPlans();
+      if (data.length > 0) {
+        setPlans(data);
+      } else {
+        toast.info("No pricing plans available at the moment");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to load pricing plans";
+      toast.error(errorMessage);
+      console.error("Error loading pricing plans:", error);
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const currentPlan = plans[activeTab];
-
-  // Open modal to collect user info
-  const handleJoinNow = () => setShowModal(true);
+  // Handle plan selection - open modal with selected plan
+  const handleSelectPlan = (plan: PricingPlan) => {
+    setSelectedPlan(plan);
+    setShowModal(true);
+  };
 
   // Confirm payment after collecting user info
   const handleConfirmPayment = () => {
-    if (!customerName || !customerEmail || !customerPhone || !instagramId || !health || !goal) {
+    if (
+      !customerName ||
+      !customerEmail ||
+      !customerPhone ||
+      !instagramId ||
+      !health ||
+      !goal
+    ) {
       toast.info("Please fill all fields before proceeding to payment");
       return;
     }
 
+    if (!selectedPlan) return;
+
     const paymentData: PaymentParams = {
-      amount: currentPlan.amount,
-      planName: `${currentPlan.duration} LIVE FITNESS PROGRAM`,
+      amount: selectedPlan.offerPrice,
+      planName: `${selectedPlan.duration} LIVE FITNESS PROGRAM`,
       customerName,
       customerEmail,
       customerPhone,
@@ -124,7 +89,7 @@ const Pricing = () => {
     };
 
     initiatePayment(paymentData);
-    // ✅ Reset form after modal
+    // Reset form after modal
     setCustomerName("");
     setCustomerEmail("");
     setCustomerPhone("");
@@ -132,7 +97,28 @@ const Pricing = () => {
     setHealth("");
     setGoal("");
     setShowModal(false);
+    setSelectedPlan(null);
   };
+
+  if (loading) {
+    return (
+      <section id="pricing" className="section-padding bg-secondary/30">
+        <div className="container-custom mx-auto text-center">
+          <p className="text-muted-foreground">Loading pricing plans...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (plans.length === 0) {
+    return (
+      <section id="pricing" className="section-padding bg-secondary/30">
+        <div className="container-custom mx-auto text-center">
+          <p className="text-muted-foreground">No pricing plans available</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="pricing" className="section-padding bg-secondary/30">
@@ -150,157 +136,233 @@ const Pricing = () => {
           </p>
         </div>
 
-        {/* Pricing Card */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
-            {/* Tab Navigation */}
-            {/* <div className="flex justify-center gap-2 p-4 bg-secondary/50 border-b border-border">
-              {["1month", "3months", "6months"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as "1month" | "3months" | "6months")}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${
-                    activeTab === tab
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "bg-background text-foreground border border-border hover:border-primary"
-                  }`}
-                >
-                  {plans[tab as "1month" | "3months" | "6months"].duration}
-                  {currentPlan.badge && tab === "6months" && (
-                    <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                      BEST
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div> */}
-            <div className="flex justify-center gap-2 p-4 bg-secondary/50 border-b border-border">
-  {(["1month", "3months", "6months"] as const).map((tab) => {
-    const plan = plans[tab];
-
-    return (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`relative px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${
-          activeTab === tab
-            ? "bg-primary text-primary-foreground shadow-lg"
-            : "bg-background text-foreground border border-border hover:border-primary"
-        }`}
-      >
-        {plan.duration}
-
-        {/* ✅ BEST badge */}
-        {plan.badge && tab === "6months" && (
-          <span className="absolute -top-2 -right-2 animate-bounce bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-  BEST
-</span>
-
-        )}
-      </button>
-    );
-  })}
-</div>
-
-            {/* Plan Content */}
-            <div className="p-6 sm:p-8">
-              {/* Plan Title */}
-              <div className="text-center mb-6">
-                <h3 className="font-display text-2xl sm:text-3xl text-foreground mb-2">
-                  {currentPlan.duration} LIVE FITNESS PROGRAM
-                </h3>
-                {currentPlan.badge && (
-                  <span className="inline-block bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-semibold">
-                    {currentPlan.badge}
-                  </span>
-                )}
-              </div>
-
-              {/* Prize Section */}
-              {currentPlan.showPrize && (
-                <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Trophy className="w-5 h-5 text-primary" />
-                    <span className="text-foreground font-bold text-lg">{currentPlan.prizeText}</span>
+        {/* Pricing Cards Grid - Select Plan */}
+        <div className="flex flex-wrap justify-center gap-6">
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className="bg-card border-2 rounded-2xl overflow-visible shadow-lg transition-all duration-300 hover:border-primary/70 hover:shadow-2xl hover:scale-105 flex flex-col relative w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[320px]"
+            >
+              {/* Badge at Top - Outside the Card */}
+              {plan.badge && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <div className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider py-1.5 px-4 rounded-full whitespace-nowrap shadow-md">
+                    {plan.badge}
                   </div>
-                  <p className="text-muted-foreground text-sm">{currentPlan.prizeNote}</p>
                 </div>
               )}
+              
+              <div className="p-6 flex flex-col flex-1">
+                {/* Plan Header */}
+                <div className="text-center font-bold">
+                  <h3 className="font-display text-xl sm:text-2xl text-foreground mb-2">
+                    {plan.duration}
+                  </h3>
+                </div>
 
-              {/* Pricing */}
-              <div className="text-center mb-6">
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <span className="text-muted-foreground line-through text-xl">
-                    {currentPlan.actualPrice}
-                  </span>
-                  <span className="font-display text-4xl sm:text-5xl text-primary">
-                    {currentPlan.offerPrice}
-                  </span>
+                {/* Pricing */}
+                <div className="text-center mb-4">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <span className="text-muted-foreground line-through text-sm">
+                      ₹{plan.actualPrice}
+                    </span>
+                    <span className="font-display text-3xl text-primary font-semibold">
+                      ₹{plan.offerPrice}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 text-primary text-xs mb-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span className="font-semibold">{plan.offerText}</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
+                    <Clock className="w-3 h-3" />
+                    <span>⏳ {plan.offerValidity}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-center gap-2 text-primary">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="font-semibold">{currentPlan.offerText}</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-muted-foreground mt-2">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">⏳ {currentPlan.offerValidity}</span>
-                </div>
-              </div>
 
-              {/* Features */}
-              <div className="mb-6">
-                <h4 className="text-foreground font-semibold mb-4">What you get:</h4>
-                <ul className="space-y-3">
-                  {currentPlan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground">{feature}</span>
-                    </li>
+                {/* Select Button */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-full text-xs mb-4"
+                  onClick={() => handleSelectPlan(plan)}
+                >
+                  Choose Plan
+                </Button>
+
+                {/* Prize Section */}
+                {plan.showPrize && (
+                  <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-lg p-3 mb-4 text-center">
+                    <div className="flex items-start justify-center mb-1">
+                      <Trophy className="w-4 h-4 text-primary mt-[2px]" />
+                      <span className="text-foreground font-bold text-sm">
+                        {plan.prizeText}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">{plan.prizeNote}</p>
+                  </div>
+                )}
+
+                {/* Features List */}
+                <div className="space-y-1.5 flex-1">
+                  {plan.features.slice(0, 10).map((feature, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground text-xs leading-relaxed">
+                        {feature}
+                      </span>
+                    </div>
                   ))}
-                </ul>
+                  {plan.features.length > 10 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailsPlan(plan);
+                        setShowDetailsModal(true);
+                      }}
+                      className="text-xs text-primary font-semibold mt-2 flex items-center gap-1 hover:underline transition-all"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>View all {plan.features.length} features</span>
+                    </button>
+                  )}
+                </div>
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-              {/* Tagline */}
-              <p className="text-center text-foreground font-medium mb-6 bg-secondary/50 rounded-lg py-3 px-4">
-                👉 {currentPlan.tagline}
+      {/* Plan Details Modal */}
+      {showDetailsModal && detailsPlan && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-background p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto">
+            {/* Plan Header - Compact */}
+            <div className="text-center mb-4 pb-3 border-b border-border">
+              <h3 className="text-3xl font-bold">{detailsPlan.duration} Plan</h3>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <p className="text-muted-foreground text-sm line-through">
+                  ₹{detailsPlan.actualPrice}
+                </p>
+                <p className="text-primary font-semibold text-3xl">
+                  ₹{detailsPlan.offerPrice}
+                </p>
+              </div>
+              <p className="text-primary text-xs mt-1">{detailsPlan.offerText}</p>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {detailsPlan.offerValidity}
               </p>
+            </div>
 
-              {/* CTA */}
+            {/* Prize Section */}
+            {detailsPlan.showPrize && (
+              <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-lg p-3 mb-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Trophy className="w-4 h-4 text-primary" />
+                  <span className="text-foreground font-bold text-sm">
+                    {detailsPlan.prizeText}
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-xs">{detailsPlan.prizeNote}</p>
+              </div>
+            )}
+
+            {/* Tagline */}
+            <p className="text-center text-foreground text-sm font-medium mb-4 bg-secondary/50 rounded-lg py-2 px-3">
+              👉 {detailsPlan.tagline}
+            </p>
+
+            {/* All Features */}
+            <div className="mb-4">
+              <h4 className="text-base font-semibold mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Complete Features List:
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {detailsPlan.features.map((feature, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground text-sm leading-snug">
+                      {feature}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-4">
               <Button
-                variant="hero"
-                size="lg"
-                className="w-full text-lg py-6"
-                onClick={handleJoinNow}
-                disabled={isLoading}
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setDetailsPlan(null);
+                }}
               >
-                {isLoading ? "Processing..." : "Join Now"}
+                Close
+              </Button>
+              <Button
+                variant="default"
+                className="w-full"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedPlan(detailsPlan);
+                  setDetailsPlan(null);
+                  setShowModal(true);
+                }}
+              >
+                Select This Plan
               </Button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* User Info Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-background p-6 rounded-xl w-[90%] max-w-md">
-            <h3 className="text-xl font-bold text-center mb-4">Enter Your Details</h3>
+      {showModal && selectedPlan && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-background p-6 rounded-xl w-[90%] max-w-md max-h-[90vh] overflow-y-auto">
+            {/* Selected Plan Header */}
+            <div className="text-center mb-4 pb-4 border-b border-border">
+              <h3 className="text-2xl font-bold">{selectedPlan.duration} Plan</h3>
+              {selectedPlan.badge && (
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary mt-2">
+                  {selectedPlan.badge}
+                </span>
+              )}
+              <div className="flex items-center justify-center gap-3 mt-3">
+                <p className="text-muted-foreground text-sm line-through">
+                  ₹{selectedPlan.actualPrice}
+                </p>
+                <p className="text-primary font-semibold text-2xl">
+                  ₹{selectedPlan.offerPrice}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-1 text-primary text-xs mb-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span className="font-semibold">{selectedPlan.offerText}</span>
+                  </div>
+            </div>
+
+            <h4 className="text-lg font-semibold text-center mb-4">Enter Your Details</h4>
             <input
               className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
               placeholder="Name"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
             />
-                   <input
-  type="tel"
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-  placeholder="WhatsApp Number"
-  value={customerPhone}
-  onChange={(e) => setCustomerPhone(e.target.value)}
-  maxLength={10}             
-  pattern="[0-9]{10}"        
-  title="Please enter a valid 10-digit mobile number"
-/>
+            <input
+              type="tel"
+              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
+              placeholder="WhatsApp Number"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              maxLength={10}
+              pattern="[0-9]{10}"
+              title="Please enter a valid 10-digit mobile number"
+            />
             <input
               className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
               placeholder="Email Address"
@@ -308,39 +370,68 @@ const Pricing = () => {
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
             />
-    
-<input
-  type="text"
-  placeholder="Instagram ID"
-  value={instagramId}
-  onChange={(e) => setInstagramId(e.target.value)}
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-/>
-<input
-  type="text"
-  placeholder="Health Issues If Any"
-  value={health}
-  onChange={(e) => setHealth(e.target.value)}
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-/>
-<input
-  type="text"
-  placeholder="Fitness Goal"
-  value={goal}
-  onChange={(e) => setGoal(e.target.value)}
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-/>
-
-
+            <input
+              type="text"
+              placeholder="Instagram ID"
+              value={instagramId}
+              onChange={(e) => setInstagramId(e.target.value)}
+              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
+            />
+            <input
+              type="text"
+              placeholder="Health Issues If Any"
+              value={health}
+              onChange={(e) => setHealth(e.target.value)}
+              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
+            />
+            <input
+              type="text"
+              placeholder="Fitness Goal"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
+            />
 
             <div className="flex gap-3 mt-4">
-              <Button variant="outline" className="w-full" onClick={() => setShowModal(false)}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowModal(false)}
+                disabled={isPaymentLoading}
+              >
                 Cancel
               </Button>
-              <Button className="w-full" onClick={handleConfirmPayment}>
-                Proceed to Pay
+              <Button 
+                className="w-full" 
+                onClick={handleConfirmPayment}
+                disabled={isPaymentLoading}
+              >
+                {isPaymentLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Proceed to Pay"
+                )}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Processing Overlay */}
+      {isPaymentLoading && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60]">
+          <div className="bg-background p-8 rounded-xl text-center shadow-2xl">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Processing Payment</h3>
+            <p className="text-muted-foreground text-sm">
+              Please wait while we prepare your payment...
+            </p>
+            <p className="text-muted-foreground text-xs mt-2">
+              Do not close this window
+            </p>
           </div>
         </div>
       )}

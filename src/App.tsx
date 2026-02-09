@@ -16,6 +16,11 @@ const PrizeChallengePolicy = lazy(() => import("./pages/PrizeChallengePolicy"));
 const ProgramPolicy = lazy(() => import("./pages/ProgramPolicy"));
 
 // Lazy load admin pages
+const PricingManagement = lazy(() =>
+  import("./components/admin/PricingManagement").then((mod) => ({
+    default: mod.PricingManagement,
+  }))
+);
 const AdminPortal = lazy(() => import("./admin/AdminPortal"));
 const AdminDashboard = lazy(() => import("./admin/pages/Dashboard"));
 const AdminPricing = lazy(() => import("./admin/pages/Pricing"));
@@ -45,6 +50,10 @@ const App = () => (
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/prize-challenge-policy" element={<PrizeChallengePolicy />} />
             <Route path="/program-policy" element={<ProgramPolicy />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/pricing" element={<PricingManagement />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

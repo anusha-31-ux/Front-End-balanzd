@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { api, endpoints } from "@/lib/apiHandler";
 import { toast } from "sonner";
 
 declare global {
@@ -61,19 +61,16 @@ export const useRazorpay = () => {
       }
 
       // ✅ Create order
-      const { data } = await axios.post(
-        "https://balanzd-api.onrender.com/api/payments/create-order",
-        {
-          amount,
-          planName,
-          customerName,
-          customerEmail,
-          customerPhone,
-          instagramId,
-          health,
-          goal
-        }
-      );
+      const data = await api.post(endpoints.razorpay.createOrder, {
+        amount,
+        planName,
+        customerName,
+        customerEmail,
+        customerPhone,
+        instagramId,
+        health,
+        goal
+      });
 
       // ✅ Open Razorpay Checkout
       const razorpay = new window.Razorpay({

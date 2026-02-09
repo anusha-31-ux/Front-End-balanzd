@@ -1,43 +1,11 @@
 /**
  * Pricing Service
  * Manages all pricing plan operations (Create, Read, Update, Delete)
- * Integrates with backend API at http://localhost:5000
+ * Integrates with backend API using the centralized API handler with encryption
  */
 
+import { api, endpoints } from "@/lib/apiHandler";
 import { PricingPlan, CreatePricingPlanInput, UpdatePricingPlanInput, ApiResponse } from "@/types/pricing";
-
-// Backend API base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const API_ENDPOINT = `${API_BASE_URL}/api/pricing/plans`;
-
-/**
- * Generic fetch wrapper with error handling
- */
-async function fetchApi<T>(
-  url: string,
-  options?: RequestInit
-): Promise<ApiResponse<T>> {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-    });
-
-    const data: ApiResponse<T> = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
-    }
-
-    return data;
-  } catch (error) {
-    console.error("API Error:", error);
-    throw error;
-  }
-}
 
 /**
  * Pricing Service Object
@@ -50,7 +18,7 @@ export const pricingService = {
    */
   async getPlans(): Promise<PricingPlan[]> {
     try {
-      const response = await fetchApi<PricingPlan[]>(API_ENDPOINT);
+      const response = await api.get<ApiResponse<PricingPlan[]>>(endpoints.pricing.plans);
       
       if (response.success && response.data) {
         // Filter active plans and sort by display order
@@ -72,7 +40,7 @@ export const pricingService = {
    */
   async getAllPlans(): Promise<PricingPlan[]> {
     try {
-      const response = await fetchApi<PricingPlan[]>(`${API_ENDPOINT}?includeInactive=true`);
+      const response = await api.get<ApiResponse<PricingPlan[]>>(`${endpoints.pricing.plans}?includeInactive=true`);
       
       if (response.success && response.data) {
         // Sort by display order
@@ -93,7 +61,7 @@ export const pricingService = {
    */
   async getPlan(id: string): Promise<PricingPlan | null> {
     try {
-      const response = await fetchApi<PricingPlan>(`${API_ENDPOINT}/${id}`);
+      const response = await api.get<ApiResponse<PricingPlan>>(endpoints.pricing.byId(id));
       
       if (response.success && response.data) {
         return response.data;
@@ -113,10 +81,7 @@ export const pricingService = {
    */
   async createPlan(data: CreatePricingPlanInput): Promise<PricingPlan> {
     try {
-      const response = await fetchApi<PricingPlan>(API_ENDPOINT, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const response = await api.post<ApiResponse<PricingPlan>>(endpoints.pricing.plans, data as Record<string, unknown>);
 
       if (response.success && response.data) {
         return response.data;
@@ -138,10 +103,7 @@ export const pricingService = {
     try {
       const { id, ...updateData } = data;
       
-      const response = await fetchApi<PricingPlan>(`${API_ENDPOINT}/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(updateData),
-      });
+      const response = await api.put<ApiResponse<PricingPlan>>(endpoints.pricing.byId(id), updateData as Record<string, unknown>);
 
       if (response.success && response.data) {
         return response.data;
@@ -160,9 +122,7 @@ export const pricingService = {
    */
   async deletePlan(id: string): Promise<void> {
     try {
-      const response = await fetchApi<void>(`${API_ENDPOINT}/${id}`, {
-        method: "DELETE",
-      });
+      const response = await api.delete<ApiResponse<void>>(endpoints.pricing.byId(id));
 
       if (!response.success) {
         throw new Error(response.message || "Failed to delete plan");
@@ -180,12 +140,7 @@ export const pricingService = {
    */
   async togglePlanStatus(id: string): Promise<{ id: string; isActive: boolean }> {
     try {
-      const response = await fetchApi<{ id: string; isActive: boolean }>(
-        `${API_ENDPOINT}/${id}/toggle-status`,
-        {
-          method: "PATCH",
-        }
-      );
+      const response = await api.patch<ApiResponse<{ id: string; isActive: boolean }>>(endpoints.pricing.toggleStatus(id));
 
       if (response.success && response.data) {
         return response.data;

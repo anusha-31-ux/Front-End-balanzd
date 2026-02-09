@@ -24,11 +24,11 @@ const Index = () => {
       <Hero />
       <LiveProgram />
       <Pricing />
+      <Testimonials />
        <About />
       <WhoIsFor />
       {/* <Services /> */}
-      <Testimonials />
-      {/* <Transformations /> */}
+      <Transformations />
       <Trainers />
       <Contact />
       <Footer />

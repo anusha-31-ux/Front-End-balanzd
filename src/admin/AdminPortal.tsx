@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InlineToast } from "@/components/ui/toast";
 import logo from "@/assets/logo_balanzed.png";
+import { adminAuthService } from "@/services/api";
 import {
   Card,
   CardContent,
@@ -43,35 +44,45 @@ const AdminPortal = () => {
     };
   }, [statusMessage]);
 
-  const allowedUsername = "balanzed";
-  const allowedPassword = "Test@123";
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     setStatusMessage(null);
 
     try {
-      if (username !== allowedUsername || password !== allowedPassword) {
-        setPassword("");
-        setIsError(true);
+      // Use centralized API service
+      const response = await adminAuthService.login(username, password);
+
+      const token = response.token || response.jwt;
+
+      if (!token) {
         setStatusMessage({
           variant: "error",
-          title: "Login failed",
-          description: "Invalid username or password.",
+          title: "Login error",
+          description: "No authentication token received.",
         });
         return;
       }
+
+      // Store JWT token in localStorage
+      localStorage.setItem("authToken", token);
 
       console.log("Admin login success:", { username });
       navigate("/admin/dashboard");
     } catch (error) {
       console.error("Login error:", error);
+      setPassword("");
+      setIsError(true);
+      
+      // Handle errors
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Invalid username or password.";
+      
       setStatusMessage({
         variant: "error",
-        title: "Login error",
-        description: "Something went wrong. Please try again.",
+        title: "Login failed",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);

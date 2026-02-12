@@ -5,6 +5,12 @@ import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
 import { pricingService } from "@/services/pricingService";
 import { PricingPlan } from "@/types/pricing";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /**
  * Pricing Section Component
@@ -27,6 +33,10 @@ const Pricing = () => {
   const [instagramId, setInstagramId] = useState("");
   const [health, setHealth] = useState("");
   const [goal, setGoal] = useState("");
+
+  // Refund policy dialog state
+  const [showRefundPolicy, setShowRefundPolicy] = useState(false);
+  const [refundPolicyAcknowledged, setRefundPolicyAcknowledged] = useState(false);
 
   // Load plans on component mount
   useEffect(() => {
@@ -75,6 +85,11 @@ const Pricing = () => {
       return;
     }
 
+    if (!refundPolicyAcknowledged) {
+      toast.info("Please acknowledge the refund policy before proceeding");
+      return;
+    }
+
     if (!selectedPlan) return;
 
     const paymentData: PaymentParams = {
@@ -96,6 +111,7 @@ const Pricing = () => {
     setInstagramId("");
     setHealth("");
     setGoal("");
+    setRefundPolicyAcknowledged(false);
     setShowModal(false);
     setSelectedPlan(null);
   };
@@ -392,6 +408,29 @@ const Pricing = () => {
               className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
             />
 
+            {/* Refund Policy Acknowledgment */}
+            <div className="mb-4">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={refundPolicyAcknowledged}
+                  onChange={(e) => setRefundPolicyAcknowledged(e.target.checked)}
+                  className="mt-1"
+                />
+                <span className="text-muted-foreground">
+                  I acknowledge that all purchases are{" "}
+                  <button
+                    type="button"
+                    onClick={() => setShowRefundPolicy(true)}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    non-refundable
+                  </button>{" "}
+                  as per the refund policy.
+                </span>
+              </label>
+            </div>
+
             <div className="flex gap-3 mt-4">
               <Button
                 variant="outline"
@@ -435,6 +474,31 @@ const Pricing = () => {
           </div>
         </div>
       )}
+
+      {/* Refund Policy Dialog */}
+      <Dialog open={showRefundPolicy} onOpenChange={setShowRefundPolicy}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Refund Policy</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <p className="text-lg font-semibold text-foreground">
+              All purchases made on BALANZED are non-refundable.
+            </p>
+            <p className="text-muted-foreground">
+              Once a program is activated, refunds will not be provided under any circumstances, including:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+              <li>Change of mind</li>
+              <li>Schedule issues</li>
+              <li>Non-attendance of sessions</li>
+            </ul>
+            <p className="text-muted-foreground">
+              In case of genuine technical issues from our side that prevent access to sessions, users may contact our support team for resolution.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

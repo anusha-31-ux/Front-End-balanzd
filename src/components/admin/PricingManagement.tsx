@@ -8,13 +8,20 @@
  * - Manage features for each plan
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +46,9 @@ export const PricingManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [featureInput, setFeatureInput] = useState("");
+
+  // State for tracking touched fields
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // State for delete confirmation dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -66,6 +76,19 @@ export const PricingManagement = () => {
   useEffect(() => {
     loadPlans();
   }, []);
+
+  // Validate required fields
+  const isFormValid = useMemo(() => {
+    return !!
+      formData.duration &&
+      formData.tagline &&
+      formData.features &&
+      formData.features.length > 0 &&
+      formData.actualPrice &&
+      formData.actualPrice > 0 &&
+      formData.offerPrice &&
+      formData.offerPrice > 0;
+  }, [formData]);
 
   /**
    * Load all plans from the service
@@ -163,14 +186,14 @@ export const PricingManagement = () => {
       const submitData = {
         duration: formData.duration,
         durationMonths: formData.durationMonths || 1,
-        badge: formData.badge || undefined,
+        badge: formData.badge || "",
         showPrize: formData.showPrize === true, // Always send as boolean
         prizeText: formData.showPrize ? (formData.prizeText || "") : "",
         prizeNote: formData.showPrize ? (formData.prizeNote || "") : "",
         actualPrice: formData.actualPrice,
         offerPrice: formData.offerPrice,
-        offerText: formData.offerText || undefined,
-        offerValidity: formData.offerValidity || undefined,
+        offerText: formData.offerText || "",
+        offerValidity: formData.offerValidity || "",
         features: formData.features,
         tagline: formData.tagline,
         displayOrder: formData.displayOrder || plans.length + 1,
@@ -245,54 +268,129 @@ export const PricingManagement = () => {
   };
 
   if (loading) {
-    return <div className="text-center">Loading plans...</div>;
+    return (
+      <div>
+        {/* Fixed Header */}
+        <div className="fixed top-[73px] left-0 right-0 z-20 flex flex-col items-start justify-between gap-4 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:left-64 md:flex-row md:items-center md:px-6">
+          <div>
+            <h1 className="text-3xl font-bold">Pricing Management</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and update pricing plans for your programs.
+            </p>
+          </div>
+          <Button disabled className="gap-2 w-full md:w-auto" size="lg">
+            <Plus className="w-4 h-4" />
+            Add New Plan
+          </Button>
+        </div>
+
+        {/* Skeleton Loaders */}
+        <div className="pt-[130px] px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Card
+              key={index}
+              className="border-slate-200/10 bg-slate-900/40 p-4 h-full flex flex-col"
+            >
+              <div className="space-y-2.5 flex-1">
+                {/* Header Skeleton */}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 flex items-center gap-2 flex-wrap">
+                    <Skeleton className="h-7 w-24 bg-slate-800/60" />
+                    <Skeleton className="h-5 w-20 bg-slate-800/60" />
+                  </div>
+                  <div className="flex gap-1 ml-2">
+                    <Skeleton className="h-8 w-8 rounded bg-slate-800/60" />
+                    <Skeleton className="h-8 w-8 rounded bg-slate-800/60" />
+                  </div>
+                </div>
+
+                {/* Details Skeleton */}
+                <div className="space-y-1 text-sm border-t border-border pt-2.5">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-16 bg-slate-800/60" />
+                    <Skeleton className="h-4 w-12 bg-slate-800/60" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-20 bg-slate-800/60" />
+                    <Skeleton className="h-4 w-12 bg-slate-800/60" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-16 bg-slate-800/60" />
+                    <Skeleton className="h-4 w-12 bg-slate-800/60" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-16 bg-slate-800/60" />
+                    <Skeleton className="h-4 w-8 bg-slate-800/60" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-24 bg-slate-800/60" />
+                    <Skeleton className="h-4 w-6 bg-slate-800/60" />
+                  </div>
+                </div>
+
+                {/* Toggle Skeleton */}
+                <div className="border-t border-border pt-2.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-20 bg-slate-800/60" />
+                    <Skeleton className="h-6 w-12 rounded-full bg-slate-800/60" />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 bg-background min-h-screen">
-      {/* Header with Add Plan Button */}
-      <div className="flex justify-between items-center">
+    <div>
+      {/* Fixed Header */}
+      <div className="fixed top-[73px] left-0 right-0 z-20 flex flex-col items-start justify-between gap-4 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:left-64 md:flex-row md:items-center md:px-6">
         <div>
           <h1 className="text-3xl font-bold">Pricing Management</h1>
           <p className="text-muted-foreground mt-1">
             Manage and update pricing plans for your programs.
           </p>
         </div>
-        <Button onClick={handleAddPlan} className="gap-2" size="lg">
+        <Button onClick={handleAddPlan} className="gap-2 w-full md:w-auto" size="lg">
           <Plus className="w-4 h-4" />
           Add New Plan
         </Button>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Content with padding to account for fixed header */}
+      <div className="pt-[130px] px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
         {plans.map((plan) => (
-          <Card key={plan.id} className="p-4 hover:shadow-lg transition-shadow">
-            <div className="space-y-3">
+          <Card
+            key={plan.id}
+            className="border-slate-200/10 bg-slate-900/40 p-4 transition-shadow hover:shadow-lg h-full flex flex-col"
+          >
+            <div className="space-y-2.5 flex-1">
               {/* Plan Header */}
               <div className="flex items-start justify-between">
-                <div className="flex-1">
+                <div className="flex-1 flex items-center gap-2 flex-wrap">
                   <h3 className="text-lg font-bold text-foreground">
                     {plan.duration}
                   </h3>
                   {plan.badge && (
-                    <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded text-xs font-semibold mt-1">
+                    <span className="inline-block bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-semibold">
                       {plan.badge}
                     </span>
                   )}
                   {!plan.isActive && (
-                    <span className="inline-block bg-destructive/20 text-destructive px-2 py-1 rounded text-xs font-semibold mt-1 ml-2">
+                    <span className="inline-block bg-destructive/20 text-destructive px-2 py-0.5 rounded text-xs font-semibold">
                       INACTIVE
                     </span>
                   )}
                 </div>
                 {/* Action Buttons */}
-                <div className="flex gap-2">
+                <div className="flex gap-1 ml-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEditPlan(plan)}
-                    className="text-primary hover:bg-primary/30"
+                    className="text-primary hover:bg-primary/30 h-8 w-8 p-0"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -300,7 +398,7 @@ export const PricingManagement = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeletePlanClick(plan.id, plan.duration)}
-                    className="text-destructive hover:bg-destructive/30"
+                    className="text-destructive hover:bg-destructive/30 h-8 w-8 p-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -308,7 +406,7 @@ export const PricingManagement = () => {
               </div>
 
               {/* Plan Details */}
-              <div className="space-y-1 text-sm border-t border-border pt-3">
+              <div className="space-y-1 text-sm border-t border-border pt-2.5">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Price:</span>
                   <span className="font-semibold">₹{plan.offerPrice}</span>
@@ -334,11 +432,11 @@ export const PricingManagement = () => {
               </div>
 
               {/* Toggle Active Status */}
-              <div className="border-t border-border pt-3">
+              <div className="border-t border-border pt-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Active Status:</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium">
+                    <span className="text-sm font-medium">
                       {plan.isActive ? "Active" : "Inactive"}
                     </span>
                     <Switch
@@ -387,8 +485,9 @@ export const PricingManagement = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, duration: e.target.value })
                       }
+                      onBlur={() => setTouched({ ...touched, duration: true })}
                       placeholder="e.g., 1 Month, 6 Months"
-                      className="mt-1"
+                      className={`mt-1 ${touched.duration && !formData.duration ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     />
                   </div>
 
@@ -512,8 +611,9 @@ export const PricingManagement = () => {
                           actualPrice: parseInt(e.target.value),
                         })
                       }
+                      onBlur={() => setTouched({ ...touched, actualPrice: true })}
                       placeholder="699"
-                      className="mt-1"
+                      className={`mt-1 ${touched.actualPrice && (!formData.actualPrice || formData.actualPrice <= 0) ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     />
                   </div>
                   <div>
@@ -530,8 +630,9 @@ export const PricingManagement = () => {
                           offerPrice: parseInt(e.target.value),
                         })
                       }
+                      onBlur={() => setTouched({ ...touched, offerPrice: true })}
                       placeholder="589"
-                      className="mt-1"
+                      className={`mt-1 ${touched.offerPrice && (!formData.offerPrice || formData.offerPrice <= 0) ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     />
                   </div>
                 </div>
@@ -586,18 +687,21 @@ export const PricingManagement = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, tagline: e.target.value })
                   }
+                  onBlur={() => setTouched({ ...touched, tagline: true })}
                   placeholder="e.g., Best plan for long-term lifestyle change and consistency"
+                  className={`${touched.tagline && !formData.tagline ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                   rows={2}
                 />
               </div>
 
               {/* ===== FEATURES SECTION ===== */}
-              <div className="space-y-3 border-b border-border pb-4">
-                <h3 className="font-semibold text-foreground">Features</h3>
+              <div className={`space-y-3 border-b pb-4 ${touched.features && (!formData.features || formData.features.length === 0) ? 'border-destructive' : 'border-border'}`}>
+                <h3 className="font-semibold text-foreground">Features *</h3>
                 <div className="flex gap-2 mb-3">
                   <Input
                     value={featureInput}
                     onChange={(e) => setFeatureInput(e.target.value)}
+                    onBlur={() => setTouched({ ...touched, features: true })}
                     placeholder="Enter a feature (e.g., Daily LIVE Workout Sessions)"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
@@ -631,8 +735,8 @@ export const PricingManagement = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No features added yet. Add some features to get started.
+                    <p className={`text-sm ${touched.features ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {touched.features ? 'Please add at least one feature' : 'No features added yet. Add some features to get started.'}
                     </p>
                   )}
                 </div>
@@ -666,10 +770,27 @@ export const PricingManagement = () => {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSavePlan} className="gap-2">
-                  <Save className="w-4 h-4" />
-                  {editingId ? "Update Plan" : "Create Plan"}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button 
+                          onClick={handleSavePlan} 
+                          className="gap-2 pointer-events-auto"
+                          disabled={!isFormValid}
+                        >
+                          <Save className="w-4 h-4" />
+                          {editingId ? "Update Plan" : "Create Plan"}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {!isFormValid && (
+                      <TooltipContent>
+                        <p>Please fill all required fields: Duration, Tagline, Features, Actual Price, and Offer Price</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </Card>

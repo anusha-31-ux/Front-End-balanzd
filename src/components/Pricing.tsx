@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, Trophy, Clock, Sparkles, Loader2 } from "lucide-react";
+import { Check, Trophy, Clock, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
@@ -11,6 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * Pricing Section Component
@@ -37,11 +43,53 @@ const Pricing = () => {
   // Refund policy dialog state
   const [showRefundPolicy, setShowRefundPolicy] = useState(false);
   const [refundPolicyAcknowledged, setRefundPolicyAcknowledged] = useState(false);
+  
+  // Track touched fields for validation display
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   // Load plans on component mount
   useEffect(() => {
     loadPlans();
   }, []);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!showModal) {
+      setCustomerName("");
+      setCustomerEmail("");
+      setCustomerPhone("");
+      setInstagramId("");
+      setHealth("");
+      setGoal("");
+      setRefundPolicyAcknowledged(false);
+      setTouchedFields({});
+    }
+  }, [showModal]);
+
+  // Validation helper
+  const isFormValid = (): boolean => {
+    return (
+      customerName.trim() !== "" &&
+      customerEmail.trim() !== "" &&
+      customerPhone.trim().length === 10 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) &&
+      instagramId.trim() !== "" &&
+      health.trim() !== "" &&
+      goal.trim() !== "" &&
+      refundPolicyAcknowledged
+    );
+  };
+
+  const isFieldEmpty = (value: string): boolean => value.trim() === "";
+  const isFieldTouched = (field: string): boolean => touchedFields[field] ?? false;
+  const getFieldBorderClass = (field: string, value: string): string => {
+    if (!isFieldTouched(field)) return "";
+    return isFieldEmpty(value) ? "border-red-500" : "";
+  };
+
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+  };
 
   /**
    * Load pricing plans from the service
@@ -115,6 +163,9 @@ const Pricing = () => {
     setShowModal(false);
     setSelectedPlan(null);
   };
+
+  const isFormReady = isFormValid();
+  const isSubmitDisabled = isPaymentLoading || !isFormReady;
 
   if (loading) {
     return (
@@ -339,74 +390,100 @@ const Pricing = () => {
       {/* User Info Modal */}
       {showModal && selectedPlan && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-background p-6 rounded-xl w-[90%] max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-black border p-6 rounded-xl w-[90%] max-w-md max-h-[90vh] overflow-y-auto">
             {/* Selected Plan Header */}
-            <div className="text-center mb-4 pb-4 border-b border-border">
-              <h3 className="text-2xl font-bold">{selectedPlan.duration} Plan</h3>
+            <div className="text-center mb-4 pb-4 border-b border-yellow-600">
+              <h3 className="text-2xl font-bold text-white">{selectedPlan.duration} Plan</h3>
               {selectedPlan.badge && (
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary mt-2">
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-yellow-600 text-black mt-2">
                   {selectedPlan.badge}
                 </span>
               )}
               <div className="flex items-center justify-center gap-3 mt-3">
-                <p className="text-muted-foreground text-sm line-through">
+                <p className="text-gray-400 text-sm line-through">
                   ₹{selectedPlan.actualPrice}
                 </p>
-                <p className="text-primary font-semibold text-2xl">
+                <p className="text-yellow-400 font-semibold text-2xl">
                   ₹{selectedPlan.offerPrice}
                 </p>
               </div>
-              <div className="flex items-center justify-center gap-1 text-primary text-xs mb-1">
+              <div className="flex items-center justify-center gap-1 text-yellow-400 text-xs mb-1">
                     <Sparkles className="w-3 h-3" />
                     <span className="font-semibold">{selectedPlan.offerText}</span>
                   </div>
             </div>
 
-            <h4 className="text-lg font-semibold text-center mb-4">Enter Your Details</h4>
+            <h4 className="text-lg font-semibold text-center mb-4 text-white">Enter Your Details</h4>
             <input
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-              placeholder="Name"
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${ getFieldBorderClass("name", customerName)}`}
+              placeholder="Name *"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              onBlur={() => handleFieldBlur("name")}
+              required
             />
             <input
               type="tel"
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-              placeholder="WhatsApp Number"
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("phone", customerPhone)}`}
+              placeholder="WhatsApp Number (10 digits) *"
               value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
+              onChange={(e) => setCustomerPhone(e.target.value.slice(0, 10).replace(/\D/g, ""))}
+              onBlur={() => handleFieldBlur("phone")}
               maxLength={10}
               pattern="[0-9]{10}"
               title="Please enter a valid 10-digit mobile number"
+              required
             />
             <input
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-              placeholder="Email Address"
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("email", customerEmail)}`}
+              placeholder="Email Address *"
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
+              onBlur={() => handleFieldBlur("email")}
+              required
             />
             <input
               type="text"
-              placeholder="Instagram ID"
+              placeholder="Instagram ID *"
               value={instagramId}
               onChange={(e) => setInstagramId(e.target.value)}
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
+              onBlur={() => handleFieldBlur("instagram")}
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("instagram", instagramId)}`}
+              required
             />
             <input
               type="text"
-              placeholder="Health Issues If Any"
+              placeholder="Health Issues If Any *"
               value={health}
               onChange={(e) => setHealth(e.target.value)}
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
+              onBlur={() => handleFieldBlur("health")}
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("health", health)}`}
+              required
             />
-            <input
-              type="text"
-              placeholder="Fitness Goal"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-            />
+            <div className="relative mb-3">
+              <select
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                onBlur={() => handleFieldBlur("goal")}
+                className={`w-full px-3 py-2 pr-9 bg-black border-2 rounded appearance-none focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("goal", goal)} ${goal ? "text-white" : "text-gray-500"}`}
+                required
+              >
+                <option value="" disabled>
+                  Fitness Goal *
+                </option>
+                <option value="Weight Loss">Weight Loss</option>
+                <option value="Fat Loss">Fat Loss</option>
+                <option value="Muscle Gain">Muscle Gain</option>
+                <option value="Strength">Strength</option>
+                <option value="Endurance">Endurance</option>
+                <option value="Flexibility">Flexibility</option>
+                <option value="Mobility">Mobility</option>
+                <option value="General Fitness">General Fitness</option>
+                <option value="Body Recomposition">Body Recomposition</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            </div>
 
             {/* Refund Policy Acknowledgment */}
             <div className="mb-4">
@@ -415,14 +492,14 @@ const Pricing = () => {
                   type="checkbox"
                   checked={refundPolicyAcknowledged}
                   onChange={(e) => setRefundPolicyAcknowledged(e.target.checked)}
-                  className="mt-1"
+                  className="mt-1 bg-black border rounded accent-yellow-500 cursor-pointer"
                 />
-                <span className="text-muted-foreground">
+                <span className="text-gray-300">
                   I acknowledge that all purchases are{" "}
                   <button
                     type="button"
                     onClick={() => setShowRefundPolicy(true)}
-                    className="text-primary hover:underline font-medium"
+                    className="text-yellow-400 hover:underline font-medium"
                   >
                     non-refundable
                   </button>{" "}
@@ -440,20 +517,48 @@ const Pricing = () => {
               >
                 Cancel
               </Button>
-              <Button 
-                className="w-full" 
-                onClick={handleConfirmPayment}
-                disabled={isPaymentLoading}
-              >
-                {isPaymentLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Proceed to Pay"
-                )}
-              </Button>
+              {!isFormReady ? (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="w-full">
+                        <Button
+                          className="w-full"
+                          onClick={handleConfirmPayment}
+                          disabled={isSubmitDisabled}
+                        >
+                          {isPaymentLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            "Proceed to Pay"
+                          )}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black text-white">
+                      <p>Fill all required fields and accept the refund policy.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={handleConfirmPayment}
+                  disabled={isPaymentLoading}
+                >
+                  {isPaymentLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Proceed to Pay"
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>

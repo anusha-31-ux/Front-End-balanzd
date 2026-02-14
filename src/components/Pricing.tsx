@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, Trophy, Clock, Sparkles, Loader2 } from "lucide-react";
+import { Check, Trophy, Clock, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
@@ -461,15 +461,29 @@ const Pricing = () => {
               className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("health", health)}`}
               required
             />
-            <input
-              type="text"
-              placeholder="Fitness Goal *"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              onBlur={() => handleFieldBlur("goal")}
-              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("goal", goal)}`}
-              required
-            />
+            <div className="relative mb-3">
+              <select
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                onBlur={() => handleFieldBlur("goal")}
+                className={`w-full px-3 py-2 pr-9 bg-black border-2 rounded appearance-none focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("goal", goal)} ${goal ? "text-white" : "text-gray-500"}`}
+                required
+              >
+                <option value="" disabled>
+                  Fitness Goal *
+                </option>
+                <option value="Weight Loss">Weight Loss</option>
+                <option value="Fat Loss">Fat Loss</option>
+                <option value="Muscle Gain">Muscle Gain</option>
+                <option value="Strength">Strength</option>
+                <option value="Endurance">Endurance</option>
+                <option value="Flexibility">Flexibility</option>
+                <option value="Mobility">Mobility</option>
+                <option value="General Fitness">General Fitness</option>
+                <option value="Body Recomposition">Body Recomposition</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            </div>
 
             {/* Refund Policy Acknowledgment */}
             <div className="mb-4">

@@ -266,19 +266,19 @@ const TransactionManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="fixed top-[73px] left-64 right-0 z-20 bg-slate-900/50 px-6 py-4 backdrop-blur border-b border-slate-200/5">
+      <div className="fixed top-[73px] left-0 right-0 z-20 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:left-64 md:px-6">
         <h2 className="text-3xl font-bold text-white">Transaction Management</h2>
         <p className="mt-2 text-slate-400">Manage payment settings and transactions.</p>
       </div>
 
-      <div className="pt-[110px] px-6 flex flex-col overflow-hidden" style={{ height: "calc(95vh - 50px)" }}>
+      <div className="pt-[110px] px-4 flex flex-col md:h-[calc(95vh-50px)] md:px-6 md:overflow-hidden">
         {/* Filters */}
         <div className="mb-6 space-y-4 flex-shrink-0">
-          <div className="flex gap-4 items-end flex-wrap">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             {/* Filter Fields Container */}
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex w-full flex-wrap gap-4">
               {/* Status Filter */}
-              <div className="space-y-2 w-[280px]">
+              <div className="space-y-2 w-full sm:w-[280px]">
                 <Label htmlFor="status-filter" className="text-slate-300 text-sm font-medium">Status</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger id="status-filter" className="bg-slate-800/50 border-slate-700 text-white">
@@ -293,7 +293,7 @@ const TransactionManagement = () => {
               </div>
 
               {/* Date From */}
-              <div className="space-y-2 w-[280px]">
+              <div className="space-y-2 w-full sm:w-[280px]">
                 <Label className="text-slate-300 text-sm font-medium">From Date</Label>
                 <Popover open={isFromCalendarOpen} onOpenChange={setIsFromCalendarOpen}>
                   <PopoverTrigger asChild>
@@ -324,7 +324,7 @@ const TransactionManagement = () => {
               </div>
 
               {/* Date To */}
-              <div className="space-y-2 w-[280px]">
+              <div className="space-y-2 w-full sm:w-[280px]">
                 <Label className="text-slate-300 text-sm font-medium">To Date</Label>
                 <Popover open={isToCalendarOpen} onOpenChange={setIsToCalendarOpen}>
                   <PopoverTrigger asChild>
@@ -360,7 +360,7 @@ const TransactionManagement = () => {
               <Button
                 variant="outline"
                 onClick={handleResetFilters}
-                className="gap-2 flex-shrink-0"
+                className="w-full gap-2 sm:w-auto"
               >
                 <RotateCcw className="h-4 w-4" />
                 Reset
@@ -370,24 +370,26 @@ const TransactionManagement = () => {
         </div>
 
         <Card className="border-slate-200/10 bg-slate-900/40 rounded-none flex flex-col flex-grow overflow-hidden">
-          {/* Fixed Table Header */}
-          <div className="border-b border-slate-200/10 flex-shrink-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-slate-400 w-2/5">User Name</TableHead>
-                  <TableHead className="text-slate-400 w-1/5">Date</TableHead>
-                  <TableHead className="text-slate-400 w-1/5">Transaction Amount</TableHead>
-                  <TableHead className="text-slate-400 w-1/5">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
-          </div>
+          <div className="flex-1 overflow-x-auto">
+            <div className="min-w-[720px] flex h-full flex-col">
+              {/* Fixed Table Header */}
+              <div className="border-b border-slate-200/10 flex-shrink-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-slate-400 w-2/5">User Name</TableHead>
+                      <TableHead className="text-slate-400 w-1/5">Date</TableHead>
+                      <TableHead className="text-slate-400 w-1/5">Transaction Amount</TableHead>
+                      <TableHead className="text-slate-400 w-1/5">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
 
-          {/* Scrollable Table Body */}
-          <div className="overflow-y-auto flex-grow">
-            <Table>
-              <TableBody>
+              {/* Scrollable Table Body */}
+              <div className="flex-grow overflow-y-auto">
+                <Table>
+                  <TableBody>
               {isLoadingMore && allItems.length === 0 ? (
                 <>
                   {loadingRows}
@@ -433,9 +435,11 @@ const TransactionManagement = () => {
                     ))}
                 </>
               )}
-              </TableBody>
-            </Table>
-            <div ref={sentinelRef} className="h-4 bg-slate-900/40" />
+                  </TableBody>
+                </Table>
+                <div ref={sentinelRef} className="h-4 bg-slate-900/40" />
+              </div>
+            </div>
           </div>
         </Card>
       </div>

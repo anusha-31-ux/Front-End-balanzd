@@ -4,18 +4,36 @@ import { config } from '@/lib/config';
 
 /**
  * Check if API encryption should be enabled
- * In development mode, encryption can be disabled via VITE_ENCRYPT_API=false
- * In production, encryption is always enabled
+ * - Development: Never encrypt
+ * - Production: Only encrypt admin APIs that require authentication
  */
-const shouldEncryptApi = (): boolean => {
-  // In production, always encrypt
-  if (import.meta.env.PROD) {
-    return true;
+const shouldEncryptApi = (url?: string): boolean => {
+  // In development, never encrypt
+  if (import.meta.env.DEV) {
+    return false;
   }
   
-  // In development, check environment variable
-  const encryptApi = import.meta.env.VITE_ENCRYPT_API;
-  return encryptApi !== 'false'; // Default to true if not set
+  // In production, only encrypt admin endpoints that require authentication
+  if (import.meta.env.PROD && url) {
+    // Admin endpoints that require login (encrypt these)
+    const adminEndpoints = [
+      '/api/admin/logout',
+      '/api/admin/refresh',
+      '/api/testimonials',
+      '/api/pricing', // Encrypt pricing admin operations, but not the public plans endpoint
+      '/api/razorpay/transaction-list'
+    ];
+    
+    // Check if the URL starts with any admin endpoint
+    // But exclude the public plans endpoint
+    const isAdminEndpoint = adminEndpoints.some(endpoint => url.startsWith(endpoint));
+    const isPublicPlansEndpoint = url === '/api/pricing/plans';
+    
+    return isAdminEndpoint && !isPublicPlansEndpoint;
+  }
+  
+  // Default: don't encrypt
+  return false;
 };
 
 /**
@@ -45,7 +63,8 @@ axiosClient.interceptors.request.use(
     }
     
     // Encrypt request body if present and encryption is enabled
-    if (config.data && shouldEncryptApi()) {
+    // Skip encryption for create-order API
+    if (config.data && shouldEncryptApi(config.url) && !config.url?.includes('/api/razorpay/create-order')) {
       const encryptedData = encryptData(config.data);
       config.data = {
         encrypted: encryptedData,
@@ -68,7 +87,8 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Check if response has encrypted data and encryption is enabled
-    if (response.data && response.data.encrypted && shouldEncryptApi()) {
+    // Skip decryption for create-order API
+    if (response.data && response.data.encrypted && shouldEncryptApi(response.config.url) && !response.config.url?.includes('/api/razorpay/create-order')) {
       try {
         // Decrypt the response data
         const decryptedData = decryptData(response.data.encrypted);

@@ -115,4 +115,7 @@ export const endpoints = {
     createOrder: '/api/razorpay/order',
     verifyPayment: '/api/razorpay/verify',
   },
+  adminRazorpay: {
+    transactions: '/api/razorpay/transaction-list',
+  },
 } as const;

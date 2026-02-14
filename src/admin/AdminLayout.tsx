@@ -16,9 +16,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-slate-900 to-slate-950">
-      {/* Header - Full Width */}
-      <header className="border-b border-slate-200/10 bg-slate-900/50 backdrop-blur">
+    <div className="h-screen overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950">
+      {/* Header - Fixed */}
+      <header className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/10 bg-slate-900/50 backdrop-blur">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800">
@@ -37,17 +37,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       </header>
 
       {/* Sidebar and Main Content */}
-      <div className="flex flex-1">
-        {/* Sidebar */}
-        <AdminSidebar />
+      <div className="flex h-[calc(100vh-73px)] mt-[73px]">
+        {/* Sidebar - Fixed */}
+        <div className="fixed top-[73px] left-0 w-64 h-[calc(100vh-73px)] z-30">
+          <AdminSidebar />
+        </div>
 
         {/* Main Content Area */}
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col ml-64 h-full overflow-hidden">
           {/* Main Content */}
-          <main className="flex-1 overflow-auto p-6">
-            <div className="mx-auto max-w-6xl">
-              {children}
-            </div>
+          <main className="flex-1 overflow-y-auto">
+            {children}
           </main>
         </div>
       </div>

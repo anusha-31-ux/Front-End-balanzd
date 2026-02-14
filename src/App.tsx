@@ -26,7 +26,7 @@ const AdminPortal = lazy(() => import("./admin/AdminPortal"));
 const AdminDashboard = lazy(() => import("./admin/pages/Dashboard"));
 const AdminPricing = lazy(() => import("./admin/pages/Pricing"));
 const AdminTestimonials = lazy(() => import("./admin/pages/Testimonials"));
-const AdminRazorpay = lazy(() => import("./admin/pages/Razorpay"));
+const AdminRazorpay = lazy(() => import("./admin/pages/transaction"));
 
 const queryClient = new QueryClient();
 

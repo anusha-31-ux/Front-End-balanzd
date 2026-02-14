@@ -249,9 +249,9 @@ export const PricingManagement = () => {
   }
 
   return (
-    <div className="space-y-6 bg-background min-h-screen">
-      {/* Header with Add Plan Button */}
-      <div className="flex justify-between items-center">
+    <div>
+      {/* Fixed Header */}
+      <div className="fixed top-[73px] left-64 right-0 z-20 flex items-center justify-between bg-slate-900/50 px-6 py-4 backdrop-blur border-b border-slate-200/5">
         <div>
           <h1 className="text-3xl font-bold">Pricing Management</h1>
           <p className="text-muted-foreground mt-1">
@@ -264,10 +264,13 @@ export const PricingManagement = () => {
         </Button>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Content with padding to account for fixed header */}
+      <div className="pt-[100px] space-y-6 min-h-screen">
         {plans.map((plan) => (
-          <Card key={plan.id} className="p-4 hover:shadow-lg transition-shadow">
+          <Card
+            key={plan.id}
+            className="border-slate-200/10 bg-slate-900/40 p-4 transition-shadow hover:shadow-lg"
+          >
             <div className="space-y-3">
               {/* Plan Header */}
               <div className="flex items-start justify-between">

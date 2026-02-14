@@ -11,12 +11,12 @@ const AdminSidebar = () => {
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
     { icon: IndianRupee, label: "Pricing", path: "/admin/pricing" },
     { icon: MessageSquare, label: "Testimonials", path: "/admin/testimonials" },
-    { icon: CreditCard, label: "Razorpay", path: "/admin/razorpay" },
+    { icon: CreditCard, label: "Transactions", path: "/admin/razorpay" },
   ];
 
   return (
-    <aside className="w-64 border-r border-slate-200/10 bg-slate-900/50">
-      <nav className="space-y-2 p-4">
+    <aside className="flex h-full w-64 flex-col border-r border-slate-200/10 bg-slate-900/50">
+      <nav className="flex-1 space-y-2 overflow-auto p-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;

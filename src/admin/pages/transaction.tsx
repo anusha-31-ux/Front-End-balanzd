@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { X, Calendar as CalendarIcon } from "lucide-react";
+import { RotateCcw, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { api, endpoints } from "@/lib/apiHandler";
@@ -112,7 +112,7 @@ const TransactionManagement = () => {
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
-  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(new Date());
   const [isFromCalendarOpen, setIsFromCalendarOpen] = useState(false);
   const [isToCalendarOpen, setIsToCalendarOpen] = useState(false);
 
@@ -120,7 +120,11 @@ const TransactionManagement = () => {
   useEffect(() => {
     const loadInitial = async () => {
       try {
+        // Clear existing data and reset pagination when filters change
+        setAllItems([]);
+        setSkip(0);
         setIsLoadingMore(true);
+        
         const params: ApiParams = {
           count: pageSize,
           skip: 0,
@@ -153,7 +157,7 @@ const TransactionManagement = () => {
     };
 
     loadInitial();
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, statusFilter]);
 
   // Load more on scroll
   useEffect(() => {
@@ -240,7 +244,7 @@ const TransactionManagement = () => {
   const handleResetFilters = () => {
     setStatusFilter("all");
     setDateFrom(undefined);
-    setDateTo(undefined);
+    setDateTo(new Date());
   };
 
   const loadingRows = Array.from({ length: 10 }, (_, index) => (
@@ -267,107 +271,107 @@ const TransactionManagement = () => {
         <p className="mt-2 text-slate-400">Manage payment settings and transactions.</p>
       </div>
 
-      <div className="pt-[100px] px-6">
+      <div className="pt-[110px] px-6 flex flex-col overflow-hidden" style={{ height: "calc(95vh - 50px)" }}>
         {/* Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2.5 max-w-4xl">
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status-filter" className="text-slate-300 text-sm font-medium">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger id="status-filter" className="bg-slate-800/50 border-slate-700 text-white">
-                  <SelectValue placeholder="Filter by Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="success">Success</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="mb-6 space-y-4 flex-shrink-0">
+          <div className="flex gap-4 items-end flex-wrap">
+            {/* Filter Fields Container */}
+            <div className="flex gap-4 flex-wrap">
+              {/* Status Filter */}
+              <div className="space-y-2 w-[280px]">
+                <Label htmlFor="status-filter" className="text-slate-300 text-sm font-medium">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="status-filter" className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectValue placeholder="Filter by Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="success">Success</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date From */}
+              <div className="space-y-2 w-[280px]">
+                <Label className="text-slate-300 text-sm font-medium">From Date</Label>
+                <Popover open={isFromCalendarOpen} onOpenChange={setIsFromCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800 hover:text-white normal-case",
+                        !dateFrom && "text-slate-400"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span className="normal-case">{dateFrom ? format(dateFrom, "dd MMM yyyy") : "Select date"}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={(date) => {
+                        setDateFrom(date);
+                        setIsFromCalendarOpen(false);
+                      }}
+                      initialFocus
+                      className="bg-slate-800 text-white"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Date To */}
+              <div className="space-y-2 w-[280px]">
+                <Label className="text-slate-300 text-sm font-medium">To Date</Label>
+                <Popover open={isToCalendarOpen} onOpenChange={setIsToCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800 hover:text-white normal-case",
+                        !dateTo && "text-slate-400"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span className="normal-case">{dateTo ? format(dateTo, "dd MMM yyyy") : "Select date"}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={(date) => {
+                        setDateTo(date);
+                        setIsToCalendarOpen(false);
+                      }}
+                      initialFocus
+                      className="bg-slate-800 text-white"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
-            {/* Date From */}
-            <div className="space-y-2">
-              <Label className="text-slate-300 text-sm font-medium">From Date</Label>
-              <Popover open={isFromCalendarOpen} onOpenChange={setIsFromCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800 hover:text-white normal-case",
-                      !dateFrom && "text-slate-400"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span className="normal-case">{dateFrom ? format(dateFrom, "dd MMM yyyy") : "Select date"}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={(date) => {
-                      setDateFrom(date);
-                      setIsFromCalendarOpen(false);
-                    }}
-                    initialFocus
-                    className="bg-slate-800 text-white"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Date To */}
-            <div className="space-y-2">
-              <Label className="text-slate-300 text-sm font-medium">To Date</Label>
-              <Popover open={isToCalendarOpen} onOpenChange={setIsToCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800 hover:text-white normal-case",
-                      !dateTo && "text-slate-400"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span className="normal-case">{dateTo ? format(dateTo, "dd MMM yyyy") : "Select date"}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={(date) => {
-                      setDateTo(date);
-                      setIsToCalendarOpen(false);
-                    }}
-                    initialFocus
-                    className="bg-slate-800 text-white"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* Reset Filters Button */}
-          {(statusFilter !== "all" || dateFrom || dateTo) && (
-            <div className="flex justify-end">
+            {/* Reset Filters Button */}
+            {(statusFilter !== "all" || dateFrom) && (
               <Button
                 variant="outline"
-                size="sm"
                 onClick={handleResetFilters}
-                className="gap-2 bg-slate-800/50 border-slate-700 text-white hover:bg-slate-700"
+                className="gap-2 flex-shrink-0"
               >
-                <X className="h-4 w-4" />
-                Reset Filters
+                <RotateCcw className="h-4 w-4" />
+                Reset
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <Card className="border-slate-200/10 bg-slate-900/40 rounded-none">
+        <Card className="border-slate-200/10 bg-slate-900/40 rounded-none flex flex-col flex-grow overflow-hidden">
           {/* Fixed Table Header */}
-          <div className="border-b border-slate-200/10">
+          <div className="border-b border-slate-200/10 flex-shrink-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -381,7 +385,7 @@ const TransactionManagement = () => {
           </div>
 
           {/* Scrollable Table Body */}
-          <div className="max-h-[calc(100vh-350px)] overflow-y-auto">
+          <div className="overflow-y-auto flex-grow">
             <Table>
               <TableBody>
               {isLoadingMore && allItems.length === 0 ? (
@@ -390,7 +394,7 @@ const TransactionManagement = () => {
                 </>
               ) : allItems.length === 0 ? (
                 <TableRow>
-                  <TableCell className="text-slate-300" colSpan={4}>
+                  <TableCell className="text-slate-300 text-center" colSpan={4}>
                     No transactions found.
                   </TableCell>
                 </TableRow>
@@ -404,7 +408,7 @@ const TransactionManagement = () => {
                       <TableCell className="text-slate-300 w-1/5">{transaction.date}</TableCell>
                       <TableCell className="text-slate-300 w-1/5">{transaction.amount}</TableCell>
                       <TableCell className="w-1/5">
-                        <Badge variant={transaction.statusVariant}>
+                        <Badge variant={transaction.statusVariant} className="w-20 justify-center">
                           {transaction.statusLabel}
                         </Badge>
                       </TableCell>
@@ -433,7 +437,9 @@ const TransactionManagement = () => {
             </Table>
             <div ref={sentinelRef} className="h-4 bg-slate-900/40" />
           </div>
-        </Card>      </div>    </AdminLayout>
+        </Card>
+      </div>
+    </AdminLayout>
   );
 };
 

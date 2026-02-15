@@ -112,7 +112,7 @@ export const endpoints = {
   },
   razorpay: {
     config: '/api/razorpay/config',
-    createOrder: '/api/razorpay/order',
+    createOrder: '/api/razorpay/create-order',
     verifyPayment: '/api/razorpay/verify',
   },
   adminRazorpay: {

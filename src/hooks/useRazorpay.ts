@@ -19,6 +19,17 @@ export interface PaymentParams {
   goal:string;
 }
 
+export interface RazorpayOrderResponse {
+  success: boolean;
+  message: string;
+  data: {
+    orderId: string;
+    amount: number;
+    currency: string;
+    keyId: string;
+  };
+}
+
 const loadRazorpayScript = () => {
   return new Promise<boolean>((resolve) => {
     if (window.Razorpay) {
@@ -61,7 +72,7 @@ export const useRazorpay = () => {
       }
 
       // ✅ Create order
-      const data = await api.post(endpoints.razorpay.createOrder, {
+      const response: RazorpayOrderResponse = await api.post(endpoints.razorpay.createOrder, {
         amount,
         planName,
         customerName,
@@ -71,6 +82,9 @@ export const useRazorpay = () => {
         health,
         goal
       });
+
+      // Extract order data from response
+      const data = response.data;
 
       // ✅ Open Razorpay Checkout
       const razorpay = new window.Razorpay({

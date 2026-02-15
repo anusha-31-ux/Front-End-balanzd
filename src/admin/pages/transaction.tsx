@@ -21,18 +21,40 @@ import { RotateCcw, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { api, endpoints } from "@/lib/apiHandler";
+import axiosClient from "@/services/axiosClient";
 import { toast } from "sonner";
 
 type TransactionItem = {
   id: string;
-  amount: number;
-  currency: string;
-  created_at: number;
-  status: string;
+  order_id?: string;
+  acquirer_data?: {
+    rrn?: string;
+    upi_transaction_id?: string;
+  };
+  bank?: string;
+  method?: string;
+  description?: string;
   email?: string;
+  contact?: string;
+  upi?: {
+    payer_account_type?: string;
+    vpa?: string;
+  };
+  status: string;
+  currency: string;
+  amount: number;
+  fee?: number;
+  tax?: number;
   notes?: {
     customerName?: string;
+    customerEmail?: string;
+    customerPhone?: string;
+    goal?: string;
+    health?: string;
+    instagramId?: string;
+    planName?: string;
   };
+  created_at: number;
 };
 
 type TransactionResponse = {
@@ -50,13 +72,20 @@ type ApiParams = {
   skip: number;
   from?: number;
   to?: number;
+  status?: string;
 };
 
 type TableRowData = {
   id: string;
   userName: string;
+  planName: string;
   date: string;
   amount: string;
+  method: string;
+  contact: string;
+  goals: string;
+  health: string;
+  instagramId: string;
   statusLabel: string;
   statusVariant: "default" | "secondary" | "destructive" | "outline";
 };
@@ -224,8 +253,14 @@ const TransactionManagement = () => {
       return {
         id: item.id,
         userName: item.notes?.customerName?.trim() || item.email || "Unknown",
+        planName: item.notes?.planName || item.description || "N/A",
         date: formatDate(item.created_at),
         amount: formatAmount(item.amount, item.currency || "INR"),
+        method: item.method || "N/A",
+        contact: item.notes?.customerPhone || item.contact || "N/A",
+        goals: item.notes?.goal || "N/A",
+        health: item.notes?.health || "N/A",
+        instagramId: item.notes?.instagramId || "N/A",
         statusLabel: statusInfo.label,
         statusVariant: statusInfo.variant,
       };
@@ -247,19 +282,74 @@ const TransactionManagement = () => {
     setDateTo(new Date());
   };
 
+  const handleExport = async () => {
+    try {
+      const params: ApiParams = {};
+
+      // Add date filters if present
+      if (dateFrom) {
+        params.from = Math.floor(dateFrom.getTime() / 1000);
+      }
+      if (dateTo) {
+        params.to = Math.floor(dateTo.getTime() / 1000);
+      }
+
+      // Add status filter if not all
+      if (statusFilter && statusFilter !== "all") {
+        params.status = statusFilter;
+      }
+
+      const response = await axiosClient.get(endpoints.adminRazorpay.exportTransactions, {
+        params,
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'transactions.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Transactions exported successfully");
+    } catch (error) {
+      console.error("Failed to export transactions:", error);
+      toast.error("Failed to export transactions");
+    }
+  };
+
   const loadingRows = Array.from({ length: 10 }, (_, index) => (
     <TableRow key={`loading-${index}`}>
-      <TableCell className="w-2/5">
-        <Skeleton className="h-4 w-36 bg-slate-800/60" />
-      </TableCell>
-      <TableCell className="w-1/5">
+      <TableCell className="w-1/12">
         <Skeleton className="h-4 w-24 bg-slate-800/60" />
       </TableCell>
-      <TableCell className="w-1/5">
-        <Skeleton className="h-4 w-28 bg-slate-800/60" />
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-20 bg-slate-800/60" />
       </TableCell>
-      <TableCell className="w-1/5">
-        <Skeleton className="h-6 w-20 rounded-full bg-slate-800/60" />
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-16 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-20 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-16 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-20 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-24 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-20 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-4 w-24 bg-slate-800/60" />
+      </TableCell>
+      <TableCell className="w-1/12">
+        <Skeleton className="h-6 w-16 rounded-full bg-slate-800/60" />
       </TableCell>
     </TableRow>
   ));
@@ -366,21 +456,37 @@ const TransactionManagement = () => {
                 Reset
               </Button>
             )}
+
+            {/* Export Button */}
+            <Button
+              variant="default"
+              onClick={handleExport}
+              className="w-full gap-2 sm:w-auto"
+            >
+              Export to XLSX
+            </Button>
           </div>
         </div>
 
         <Card className="border-slate-200/10 bg-slate-900/40 rounded-none flex flex-col flex-grow overflow-hidden">
-          <div className="flex-1 overflow-x-auto">
-            <div className="min-w-[720px] flex h-full flex-col">
+          {/* Desktop Table View */}
+          <div className="hidden md:flex flex-1 overflow-x-auto">
+            <div className="min-w-[1400px] flex h-full flex-col">
               {/* Fixed Table Header */}
               <div className="border-b border-slate-200/10 flex-shrink-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-slate-400 w-2/5">User Name</TableHead>
-                      <TableHead className="text-slate-400 w-1/5">Date</TableHead>
-                      <TableHead className="text-slate-400 w-1/5">Transaction Amount</TableHead>
-                      <TableHead className="text-slate-400 w-1/5">Status</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Customer Name</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Plan</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Date</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Amount</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Method</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Contact</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Goals</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Health</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Instagram</TableHead>
+                      <TableHead className="text-slate-400 text-left w-1/12">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                 </Table>
@@ -396,7 +502,7 @@ const TransactionManagement = () => {
                 </>
               ) : allItems.length === 0 ? (
                 <TableRow>
-                  <TableCell className="text-slate-300 text-center" colSpan={4}>
+                  <TableCell className="text-slate-300 text-center" colSpan={10}>
                     No transactions found.
                   </TableCell>
                 </TableRow>
@@ -404,13 +510,19 @@ const TransactionManagement = () => {
                 <>
                   {rows.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell className="font-medium text-white w-2/5">
+                      <TableCell className="font-medium text-white w-1/12">
                         {transaction.userName}
                       </TableCell>
-                      <TableCell className="text-slate-300 w-1/5">{transaction.date}</TableCell>
-                      <TableCell className="text-slate-300 w-1/5">{transaction.amount}</TableCell>
-                      <TableCell className="w-1/5">
-                        <Badge variant={transaction.statusVariant} className="w-20 justify-center">
+                      <TableCell className="text-slate-300 w-1/12">{transaction.planName}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.date}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.amount}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.method}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.contact}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.goals}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.health}</TableCell>
+                      <TableCell className="text-slate-300 w-1/12">{transaction.instagramId}</TableCell>
+                      <TableCell className="w-1/12">
+                        <Badge variant={transaction.statusVariant} className="w-16 justify-center">
                           {transaction.statusLabel}
                         </Badge>
                       </TableCell>
@@ -419,17 +531,35 @@ const TransactionManagement = () => {
                   {isLoadingMore &&
                     loadingRows.map((row, idx) => (
                       <TableRow key={`loading-append-${idx}`}>
-                        <TableCell className="w-2/5">
-                          <Skeleton className="h-4 w-36 bg-slate-800/60" />
-                        </TableCell>
-                        <TableCell className="w-1/5">
+                        <TableCell className="w-1/12">
                           <Skeleton className="h-4 w-24 bg-slate-800/60" />
                         </TableCell>
-                        <TableCell className="w-1/5">
-                          <Skeleton className="h-4 w-28 bg-slate-800/60" />
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-20 bg-slate-800/60" />
                         </TableCell>
-                        <TableCell className="w-1/5">
-                          <Skeleton className="h-6 w-20 rounded-full bg-slate-800/60" />
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-16 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-20 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-16 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-20 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-24 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-20 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-4 w-24 bg-slate-800/60" />
+                        </TableCell>
+                        <TableCell className="w-1/12">
+                          <Skeleton className="h-6 w-16 rounded-full bg-slate-800/60" />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -440,6 +570,93 @@ const TransactionManagement = () => {
                 <div ref={sentinelRef} className="h-4 bg-slate-900/40" />
               </div>
             </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden flex-1 overflow-y-auto p-4 space-y-4">
+            {isLoadingMore && allItems.length === 0 ? (
+              // Mobile loading cards
+              Array.from({ length: 5 }).map((_, index) => (
+                <Card key={index} className="border-slate-200/10 bg-slate-800/40 p-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <Skeleton className="h-5 w-32 bg-slate-700/60" />
+                      <Skeleton className="h-6 w-16 rounded-full bg-slate-700/60" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24 bg-slate-700/60" />
+                      <Skeleton className="h-4 w-20 bg-slate-700/60" />
+                      <Skeleton className="h-4 w-28 bg-slate-700/60" />
+                      <Skeleton className="h-4 w-16 bg-slate-700/60" />
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : allItems.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400">No transactions found.</p>
+              </div>
+            ) : (
+              <>
+                {rows.map((transaction) => (
+                  <Card key={transaction.id} className="border-slate-200/10 bg-slate-800/40 p-4">
+                    <div className="space-y-3">
+                      {/* Header with name and status */}
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium text-white text-lg">{transaction.userName}</h3>
+                        <Badge variant={transaction.statusVariant} className="text-xs">
+                          {transaction.statusLabel}
+                        </Badge>
+                      </div>
+
+                      {/* Transaction details */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-slate-400">Plan</p>
+                          <p className="text-white">{transaction.planName}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Date</p>
+                          <p className="text-white">{transaction.date}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Amount</p>
+                          <p className="text-white font-medium">{transaction.amount}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Method</p>
+                          <p className="text-white">{transaction.method}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Contact</p>
+                          <p className="text-white">{transaction.contact}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Goals</p>
+                          <p className="text-white text-xs">{transaction.goals}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Health</p>
+                          <p className="text-white text-xs">{transaction.health}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Instagram</p>
+                          <p className="text-white text-xs">{transaction.instagramId}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                {/* Mobile loading indicator */}
+                {isLoadingMore && (
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    <p className="text-slate-400 text-sm mt-2">Loading more...</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </Card>
       </div>

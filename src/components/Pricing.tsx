@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, Trophy, Clock, Sparkles, Loader2, ChevronDown } from "lucide-react";
+import { Check, Trophy, Clock, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ const Pricing = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [instagramId, setInstagramId] = useState("");
   const [health, setHealth] = useState("");
-  const [goal, setGoal] = useState("");
+  const [goal, setGoal] = useState<string[]>([]);
 
   // Refund policy dialog state
   const [showRefundPolicy, setShowRefundPolicy] = useState(false);
@@ -46,6 +46,18 @@ const Pricing = () => {
   
   // Track touched fields for validation display
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  
+  const goalOptions = [
+    "Weight Loss",
+    "Fat Loss",
+    "Muscle Gain",
+    "Strength",
+    "Endurance",
+    "Flexibility",
+    "Mobility",
+    "General Fitness",
+    "Body Recomposition",
+  ];
 
   // Load plans on component mount
   useEffect(() => {
@@ -60,7 +72,7 @@ const Pricing = () => {
       setCustomerPhone("");
       setInstagramId("");
       setHealth("");
-      setGoal("");
+      setGoal([]);
       setRefundPolicyAcknowledged(false);
       setTouchedFields({});
     }
@@ -75,7 +87,7 @@ const Pricing = () => {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) &&
       instagramId.trim() !== "" &&
       health.trim() !== "" &&
-      goal.trim() !== "" &&
+      goal.length > 0 &&
       refundPolicyAcknowledged
     );
   };
@@ -127,7 +139,7 @@ const Pricing = () => {
       !customerPhone ||
       !instagramId ||
       !health ||
-      !goal
+      !goal.length
     ) {
       toast.info("Please fill all fields before proceeding to payment");
       return;
@@ -148,7 +160,7 @@ const Pricing = () => {
       customerPhone,
       instagramId,
       health,
-      goal,
+      goal: goal.join(", "),
     };
 
     initiatePayment(paymentData);
@@ -158,7 +170,7 @@ const Pricing = () => {
     setCustomerPhone("");
     setInstagramId("");
     setHealth("");
-    setGoal("");
+    setGoal([]);
     setRefundPolicyAcknowledged(false);
     setShowModal(false);
     setSelectedPlan(null);
@@ -461,28 +473,28 @@ const Pricing = () => {
               className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("health", health)}`}
               required
             />
-            <div className="relative mb-3">
-              <select
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                onBlur={() => handleFieldBlur("goal")}
-                className={`w-full px-3 py-2 pr-9 bg-black border-2 rounded appearance-none focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("goal", goal)} ${goal ? "text-white" : "text-gray-500"}`}
-                required
-              >
-                <option value="" disabled>
-                  Fitness Goal *
-                </option>
-                <option value="Weight Loss">Weight Loss</option>
-                <option value="Fat Loss">Fat Loss</option>
-                <option value="Muscle Gain">Muscle Gain</option>
-                <option value="Strength">Strength</option>
-                <option value="Endurance">Endurance</option>
-                <option value="Flexibility">Flexibility</option>
-                <option value="Mobility">Mobility</option>
-                <option value="General Fitness">General Fitness</option>
-                <option value="Body Recomposition">Body Recomposition</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <div className={`mb-3 p-3 bg-black border-2 rounded ${getFieldBorderClass("goal", goal.length > 0 ? "selected" : "")}`}>
+              <label className="block text-white mb-2">Fitness Goal * (Select multiple)</label>
+              <div className="grid grid-cols-2 gap-2">
+                {goalOptions.map((option) => (
+                  <label key={option} className="flex items-center gap-2 text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={goal.includes(option)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setGoal([...goal, option]);
+                        } else {
+                          setGoal(goal.filter(g => g !== option));
+                        }
+                      }}
+                      onBlur={() => handleFieldBlur("goal")}
+                      className="bg-black border rounded accent-yellow-500 cursor-pointer"
+                    />
+                    <span className="text-sm">{option}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Refund Policy Acknowledgment */}

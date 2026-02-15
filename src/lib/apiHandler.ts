@@ -117,5 +117,6 @@ export const endpoints = {
   },
   adminRazorpay: {
     transactions: '/api/razorpay/transaction-list',
+    exportTransactions: '/api/razorpay/transactions/download',
   },
 } as const;

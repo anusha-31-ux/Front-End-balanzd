@@ -79,35 +79,35 @@ export const testimonialsService = {
    * Get all testimonials
    */
   getAll: async (): Promise<Testimonial[]> => {
-    return api.get<Testimonial[]>(endpoints.testimonials.base);
+    return api.get<Testimonial[]>(endpoints.admin.testimonials.base);
   },
 
   /**
    * Get a single testimonial by ID
    */
   getById: async (id: string): Promise<Testimonial> => {
-    return api.get<Testimonial>(endpoints.testimonials.byId(id));
+    return api.get<Testimonial>(endpoints.admin.testimonials.byId(id));
   },
 
   /**
    * Create a new testimonial
    */
   create: async (data: Partial<Testimonial>): Promise<Testimonial> => {
-    return api.post<Testimonial>(endpoints.testimonials.base, data as Record<string, unknown>);
+    return api.post<Testimonial>(endpoints.admin.testimonials.base, data as Record<string, unknown>);
   },
 
   /**
    * Update an existing testimonial
    */
   update: async (id: string, data: Partial<Testimonial>): Promise<Testimonial> => {
-    return api.put<Testimonial>(endpoints.testimonials.byId(id), data as Record<string, unknown>);
+    return api.put<Testimonial>(endpoints.admin.testimonials.byId(id), data as Record<string, unknown>);
   },
 
   /**
    * Delete a testimonial
    */
   delete: async (id: string): Promise<{ success: boolean; message?: string }> => {
-    return api.delete(endpoints.testimonials.byId(id));
+    return api.delete(endpoints.admin.testimonials.byId(id));
   },
 };
 

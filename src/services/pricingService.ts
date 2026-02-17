@@ -18,7 +18,7 @@ export const pricingService = {
    */
   async getPlans(): Promise<PricingPlan[]> {
     try {
-      const response = await api.get<ApiResponse<PricingPlan[]>>(endpoints.pricing.plans);
+      const response = await api.get<ApiResponse<PricingPlan[]>>(endpoints.public.pricing.plans);
       
       if (response.success && response.data) {
         // Filter active plans and sort by display order
@@ -40,7 +40,7 @@ export const pricingService = {
    */
   async getAllPlans(): Promise<PricingPlan[]> {
     try {
-      const response = await api.get<ApiResponse<PricingPlan[]>>(`${endpoints.pricing.plans}?includeInactive=true`);
+      const response = await api.get<ApiResponse<PricingPlan[]>>(`${endpoints.admin.pricing.plans}?includeInactive=true`);
       
       if (response.success && response.data) {
         // Sort by display order
@@ -61,7 +61,7 @@ export const pricingService = {
    */
   async getPlan(id: string): Promise<PricingPlan | null> {
     try {
-      const response = await api.get<ApiResponse<PricingPlan>>(endpoints.pricing.byId(id));
+      const response = await api.get<ApiResponse<PricingPlan>>(endpoints.public.pricing.byId(id));
       
       if (response.success && response.data) {
         return response.data;
@@ -81,7 +81,7 @@ export const pricingService = {
    */
   async createPlan(data: CreatePricingPlanInput): Promise<PricingPlan> {
     try {
-      const response = await api.post<ApiResponse<PricingPlan>>(endpoints.pricing.plans, data as Record<string, unknown>);
+      const response = await api.post<ApiResponse<PricingPlan>>(endpoints.admin.pricing.plans, data as Record<string, unknown>);
 
       if (response.success && response.data) {
         return response.data;
@@ -103,7 +103,7 @@ export const pricingService = {
     try {
       const { id, ...updateData } = data;
       
-      const response = await api.put<ApiResponse<PricingPlan>>(endpoints.pricing.byId(id), updateData as Record<string, unknown>);
+      const response = await api.put<ApiResponse<PricingPlan>>(endpoints.admin.pricing.byId(id), updateData as Record<string, unknown>);
 
       if (response.success && response.data) {
         return response.data;
@@ -122,7 +122,7 @@ export const pricingService = {
    */
   async deletePlan(id: string): Promise<void> {
     try {
-      const response = await api.delete<ApiResponse<void>>(endpoints.pricing.byId(id));
+      const response = await api.delete<ApiResponse<void>>(endpoints.admin.pricing.byId(id));
 
       if (!response.success) {
         throw new Error(response.message || "Failed to delete plan");
@@ -140,7 +140,7 @@ export const pricingService = {
    */
   async togglePlanStatus(id: string): Promise<{ id: string; isActive: boolean }> {
     try {
-      const response = await api.patch<ApiResponse<{ id: string; isActive: boolean }>>(endpoints.pricing.toggleStatus(id));
+      const response = await api.patch<ApiResponse<{ id: string; isActive: boolean }>>(endpoints.admin.pricing.toggleStatus(id));
 
       if (response.success && response.data) {
         return response.data;

@@ -1,7 +1,7 @@
 # API Integration Guide
 
 ## Overview
-This project uses encrypted API communication with JWT authentication. All API requests and responses are automatically encrypted/decrypted using AES encryption with the key `DRINK_HOT_WATER`.
+This project uses optional encrypted API communication with JWT authentication. API requests and responses can be automatically encrypted/decrypted using AES encryption with the key `DRINK_HOT_WATER`, controlled by the `VITE_ENCRYPT_API` environment variable.
 
 ## Architecture
 
@@ -11,15 +11,15 @@ This project uses encrypted API communication with JWT authentication. All API r
 - Encryption key: `DRINK_HOT_WATER` (must match backend)
 
 ### 2. Axios Client (`src/services/axiosClient.ts`)
-Configured axios instance with automatic encryption/decryption interceptors.
+Configured axios instance with conditional encryption/decryption interceptors.
 
 #### Request Interceptor
-- Automatically encrypts request body
-- Wraps encrypted data in `{ encrypted: encryptedData }`
+- Conditionally encrypts request body if `VITE_ENCRYPT_API=true`
+- Wraps encrypted data in `{ payload: encryptedData }`
 - Adds JWT token to Authorization header
 
 #### Response Interceptor
-- Automatically decrypts response data
+- Conditionally decrypts response data if `VITE_ENCRYPT_API=true`
 - Handles 401 errors (redirects to login)
 - Error handling with detailed messages
 
@@ -62,7 +62,7 @@ const newTestimonial = await testimonialsService.create({
 ### Authentication Flow
 
 1. User submits login credentials
-2. Request is encrypted and sent to `/api/admin/login`
+2. Request is encrypted and sent to `/api/login`
 3. Backend validates and returns JWT token (encrypted)
 4. Response is decrypted automatically
 5. Token is stored in localStorage as `authToken`
@@ -78,14 +78,18 @@ adminAuthService.logout();
 
 ## Environment Configuration
 
-Backend URL is configured in `.env`:
+Backend URL and encryption are configured in `.env` files:
+
+**Development (.env):**
 ```env
 VITE_API_BASE_URL=http://localhost:5000
+# VITE_ENCRYPT_API=false (default, encryption disabled)
 ```
 
-Change this for production:
+**Production (.env.production):**
 ```env
 VITE_API_BASE_URL=https://api.yourdomain.com
+VITE_ENCRYPT_API=false
 ```
 
 ## Protected Routes

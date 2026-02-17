@@ -72,7 +72,7 @@ export const useRazorpay = () => {
       }
 
       // ✅ Create order
-      const response: RazorpayOrderResponse = await api.post(endpoints.razorpay.createOrder, {
+      const response: RazorpayOrderResponse = await api.post(endpoints.public.razorpay.createOrder, {
         amount,
         planName,
         customerName,

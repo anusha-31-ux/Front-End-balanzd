@@ -136,7 +136,8 @@ const TransactionManagement = () => {
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const pageSize = 10;
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const desktopSentinelRef = useRef<HTMLDivElement>(null);
+  const mobileSentinelRef = useRef<HTMLDivElement>(null);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -236,13 +237,22 @@ const TransactionManagement = () => {
       { threshold: 0.1 }
     );
 
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
+    const desktopTarget = desktopSentinelRef.current;
+    const mobileTarget = mobileSentinelRef.current;
+
+    if (desktopTarget) {
+      observer.observe(desktopTarget);
+    }
+    if (mobileTarget) {
+      observer.observe(mobileTarget);
     }
 
     return () => {
-      if (sentinelRef.current) {
-        observer.unobserve(sentinelRef.current);
+      if (desktopTarget) {
+        observer.unobserve(desktopTarget);
+      }
+      if (mobileTarget) {
+        observer.unobserve(mobileTarget);
       }
     };
   }, [isLoadingMore, hasMore, skip, allItems, dateFrom, dateTo]);
@@ -284,7 +294,7 @@ const TransactionManagement = () => {
 
   const handleExport = async () => {
     try {
-      const params: ApiParams = {};
+      const params: Partial<ApiParams> = {};
 
       // Add date filters if present
       if (dateFrom) {
@@ -356,12 +366,12 @@ const TransactionManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="fixed top-[73px] left-0 right-0 z-20 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:left-64 md:px-6">
+      <div className="fixed top-[73px] left-0 right-0 z-20 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:top-[73px] md:left-64 md:px-6">
         <h2 className="text-3xl font-bold text-white">Transaction Management</h2>
         <p className="mt-2 text-slate-400">Manage payment settings and transactions.</p>
       </div>
 
-      <div className="pt-[110px] px-4 flex flex-col md:h-[calc(95vh-50px)] md:px-6 md:overflow-hidden">
+      <div className="pt-[160px] px-4 flex flex-col md:h-[calc(95vh-50px)] md:px-6 md:pt-[110px] md:overflow-hidden">
         {/* Filters */}
         <div className="mb-6 space-y-4 flex-shrink-0">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -468,13 +478,13 @@ const TransactionManagement = () => {
           </div>
         </div>
 
-        <Card className="border-slate-200/10 bg-slate-900/40 rounded-none flex flex-col flex-grow overflow-hidden">
+        <Card className="border-slate-200/10 bg-slate-900/40 rounded-lg flex flex-col flex-grow overflow-hidden">
           {/* Desktop Table View */}
           <div className="hidden md:flex flex-1 overflow-x-auto">
             <div className="min-w-[1400px] flex h-full flex-col">
               {/* Fixed Table Header */}
               <div className="border-b border-slate-200/10 flex-shrink-0">
-                <Table>
+                <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-slate-400 text-left w-1/12">Customer Name</TableHead>
@@ -494,7 +504,7 @@ const TransactionManagement = () => {
 
               {/* Scrollable Table Body */}
               <div className="flex-grow overflow-y-auto">
-                <Table>
+                <Table className="w-full table-fixed">
                   <TableBody>
               {isLoadingMore && allItems.length === 0 ? (
                 <>
@@ -567,7 +577,7 @@ const TransactionManagement = () => {
               )}
                   </TableBody>
                 </Table>
-                <div ref={sentinelRef} className="h-4 bg-slate-900/40" />
+                <div ref={desktopSentinelRef} className="h-4 bg-slate-900/40" />
               </div>
             </div>
           </div>
@@ -633,15 +643,15 @@ const TransactionManagement = () => {
                         </div>
                         <div>
                           <p className="text-slate-400">Goals</p>
-                          <p className="text-white text-xs">{transaction.goals}</p>
+                          <p className="text-white">{transaction.goals}</p>
                         </div>
                         <div>
                           <p className="text-slate-400">Health</p>
-                          <p className="text-white text-xs">{transaction.health}</p>
+                          <p className="text-white">{transaction.health}</p>
                         </div>
                         <div>
                           <p className="text-slate-400">Instagram</p>
-                          <p className="text-white text-xs">{transaction.instagramId}</p>
+                          <p className="text-white">{transaction.instagramId}</p>
                         </div>
                       </div>
                     </div>
@@ -657,6 +667,7 @@ const TransactionManagement = () => {
                 )}
               </>
             )}
+            <div ref={mobileSentinelRef} className="h-4" />
           </div>
         </Card>
       </div>

@@ -271,7 +271,7 @@ export const PricingManagement = () => {
     return (
       <div>
         {/* Fixed Header */}
-        <div className="fixed top-[73px] left-0 right-0 z-20 flex flex-col items-start justify-between gap-4 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:left-64 md:flex-row md:items-center md:px-6">
+        <div className="fixed top-[73px] left-0 right-0 z-20 flex flex-col items-start justify-between gap-4 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:top-[73px] md:left-64 md:flex-row md:items-center md:px-6">
           <div>
             <h1 className="text-3xl font-bold">Pricing Management</h1>
             <p className="text-muted-foreground mt-1">
@@ -285,7 +285,7 @@ export const PricingManagement = () => {
         </div>
 
         {/* Skeleton Loaders */}
-        <div className="pt-[130px] px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+        <div className="pt-[240px] pb-5 px-4 md:px-6 md:pt-[130px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
           {Array.from({ length: 6 }).map((_, index) => (
             <Card
               key={index}
@@ -346,7 +346,7 @@ export const PricingManagement = () => {
   return (
     <div>
       {/* Fixed Header */}
-      <div className="fixed top-[73px] left-0 right-0 z-20 flex flex-col items-start justify-between gap-4 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:left-64 md:flex-row md:items-center md:px-6">
+      <div className="fixed top-[73px] left-0 right-0 z-20 flex flex-col items-start justify-between gap-4 border-b border-slate-200/5 bg-slate-900/50 px-4 py-4 backdrop-blur md:top-[73px] md:left-64 md:flex-row md:items-center md:px-6">
         <div>
           <h1 className="text-3xl font-bold">Pricing Management</h1>
           <p className="text-muted-foreground mt-1">
@@ -360,7 +360,7 @@ export const PricingManagement = () => {
       </div>
 
       {/* Content with padding to account for fixed header */}
-      <div className="pt-[130px] px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+      <div className="pt-[240px] pb-5 px-4 md:px-6 md:pt-[130px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
         {plans.map((plan) => (
           <Card
             key={plan.id}

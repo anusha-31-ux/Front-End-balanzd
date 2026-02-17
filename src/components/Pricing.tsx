@@ -371,7 +371,7 @@ const Pricing = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mt-4">
+            <div className="flex flex-col gap-3 mt-4 sm:flex-row">
               <Button
                 variant="outline"
                 className="w-full"
@@ -520,7 +520,7 @@ const Pricing = () => {
               </label>
             </div>
 
-            <div className="flex gap-3 mt-4">
+            <div className="flex flex-col gap-3 mt-4 sm:flex-row">
               <Button
                 variant="outline"
                 className="w-full"

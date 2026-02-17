@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses a **3-layer centralized API system** that provides a clean separation of concerns for making API requests with automatic encryption and authentication.
+This project uses a **3-layer centralized API system** that provides a clean separation of concerns for making API requests with optional automatic encryption and authentication.
 
 ## Architecture Layers
 
@@ -53,16 +53,24 @@ export const api = {
 // Centralized endpoints
 export const endpoints = {
   auth: {
-    login: '/api/admin/login',
-    logout: '/api/admin/logout',
+    login: '/api/login',
+    logout: '/api/logout/admin',
   },
-  testimonials: {
-    base: '/api/testimonials',
-    byId: (id: string) => `/api/testimonials/${id}`,
+  admin: {
+    testimonials: {
+      base: '/api/testimonials/admin',
+      byId: (id: string) => `/api/testimonials/admin/${id}`,
+    },
+    pricing: {
+      base: '/api/pricing/admin',
+      byId: (id: string) => `/api/pricing/admin/${id}`,
+    },
   },
-  pricing: {
-    base: '/api/pricing',
-    byId: (id: string) => `/api/pricing/${id}`,
+  public: {
+    pricing: {
+      plans: '/api/pricing/plans',
+      byId: (id: string) => `/api/pricing/plans/${id}`,
+    },
   },
 }
 ```
@@ -88,11 +96,11 @@ export interface Testimonial {
 
 export const testimonialsService = {
   getAll: async (): Promise<Testimonial[]> => {
-    return api.get<Testimonial[]>(endpoints.testimonials.base);
+    return api.get<Testimonial[]>(endpoints.admin.testimonials.base);
   },
   
   create: async (data: Partial<Testimonial>): Promise<Testimonial> => {
-    return api.post<Testimonial>(endpoints.testimonials.base, data);
+    return api.post<Testimonial>(endpoints.admin.testimonials.base, data);
   },
   // ... other methods
 }
@@ -130,7 +138,7 @@ Provides automatic encryption, decryption, and authentication:
 
 **Request Interceptor**:
 1. Encrypts request body using AES encryption
-2. Wraps encrypted data in `{ encrypted: encryptedData }`
+2. Conditionally wraps encrypted data in `{ payload: encryptedData }` (if VITE_ENCRYPT_API=true)
 3. Adds JWT token to Authorization header
 
 **Response Interceptor**:
@@ -155,13 +163,13 @@ const newTestimonial = await testimonialsService.create({
 });
 
 // 2. Service calls API handler
-return api.post<Testimonial>(endpoints.testimonials.base, data);
+return api.post<Testimonial>(endpoints.admin.testimonials.base, data);
 
 // 3. API handler calls axios client
 const response = await axiosClient.post(endpoint, data);
 
-// 4. Axios interceptor encrypts data
-config.data = { encrypted: encryptData(data) };
+// 4. Axios interceptor conditionally encrypts data (if VITE_ENCRYPT_API=true)
+config.data = { payload: encryptData(data) };
 
 // 5. Request sent to backend with JWT token
 // Authorization: Bearer <token>
@@ -301,7 +309,7 @@ test('getAll should fetch testimonials', async () => {
   const result = await testimonialsService.getAll();
   
   expect(result).toEqual(mockData);
-  expect(api.get).toHaveBeenCalledWith(endpoints.testimonials.base);
+  expect(api.get).toHaveBeenCalledWith(endpoints.admin.testimonials.base);
 });
 ```
 

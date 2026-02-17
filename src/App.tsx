@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PageLoader from "./components/PageLoader";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { UpdateNotification } from "./components/UpdateNotification";
 
 // Lazy load policy pages
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
@@ -60,6 +61,7 @@ const App = () => (
           </Routes>
         </Suspense>
       </BrowserRouter>
+      <UpdateNotification />
     </TooltipProvider>
   </QueryClientProvider>
 );

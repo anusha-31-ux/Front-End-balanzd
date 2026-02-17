@@ -1,9 +1,9 @@
 import CryptoJS from 'crypto-js';
 
 /**
- * Encryption key - must match the backend
+ * Encryption key - from environment variable
  */
-const ENCRYPTION_KEY = 'DRINK_HOT_WATER';
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'DRINK_HOT_WATER';
 
 /**
  * Encrypts data using AES encryption

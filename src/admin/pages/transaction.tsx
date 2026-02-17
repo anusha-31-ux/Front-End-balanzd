@@ -168,7 +168,7 @@ const TransactionManagement = () => {
         }
 
         const response = await api.get<TransactionResponse>(
-          endpoints.adminRazorpay.transactions,
+          endpoints.admin.razorpay.transactions,
           { params }
         );
         const items = response.data?.items ?? [];
@@ -213,7 +213,7 @@ const TransactionManagement = () => {
             }
 
             const response = await api.get<TransactionResponse>(
-              endpoints.adminRazorpay.transactions,
+              endpoints.admin.razorpay.transactions,
               { params }
             );
             const newItems = response.data?.items ?? [];
@@ -299,7 +299,7 @@ const TransactionManagement = () => {
         params.status = statusFilter;
       }
 
-      const response = await axiosClient.get(endpoints.adminRazorpay.exportTransactions, {
+      const response = await axiosClient.get(endpoints.admin.razorpay.exportTransactions, {
         params,
         responseType: 'blob',
       });

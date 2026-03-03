@@ -10,6 +10,7 @@ import Transformations from "@/components/Transformations";
 import Pricing from "@/components/Pricing";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import PromoBanner from "@/components/PromoBanner";
 
 /**
  * Index Page
@@ -18,7 +19,7 @@ import Footer from "@/components/Footer";
 const Index = () => {
   return (
     <main className="min-h-screen bg-background">
-      {/* <PromoBanner /> */}
+      <PromoBanner />
       <Navbar />
       <Hero />
       <LiveProgram />

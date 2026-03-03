@@ -15,7 +15,7 @@ const PromoBanner = () => {
       <div className="container-custom mx-auto flex items-center justify-center gap-3 text-primary-foreground">
         <Gift className="w-5 h-5 animate-bounce" />
         <p className="text-sm md:text-base font-semibold text-center">
-          🎉 “Join our 6-Month Plan & Stand a Chance to Win ₹3,00,000 — Not for Transformation, but for Consistency”
+          🌸 Women's Day Special: Purchase our 6-Month Plan and Get 3 Months Free!
         </p>
         <button
           onClick={() => setIsVisible(false)}

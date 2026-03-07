@@ -234,6 +234,7 @@ export const endpoints = {
     testimonials: {
       base: '/api/testimonials/admin',
       byId: (id: string) => `/api/testimonials/admin/${id}`,
+      toggleVisibility: (id: string) => `/api/testimonials/admin/${id}/toggle-visibility`,
     },
     pricing: {
       base: '/api/pricing/admin',
@@ -247,6 +248,9 @@ export const endpoints = {
     },
   },
   public: {
+    testimonials: {
+      base: '/api/testimonials',
+    },
     pricing: {
       plans: '/api/pricing/plans',
       byId: (id: string) => `/api/pricing/plans/${id}`,

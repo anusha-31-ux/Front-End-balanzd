@@ -220,7 +220,7 @@ const Pricing = () => {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className="bg-card border-2 rounded-2xl overflow-visible shadow-lg transition-all duration-300 hover:border-primary/70 hover:shadow-2xl hover:scale-105 flex flex-col relative w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[320px]"
+              className="bg-card border-2 rounded-2xl overflow-visible shadow-lg transition-all duration-300 hover:border-primary/70 hover:shadow-2xl hover:scale-105 flex flex-col relative w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[300px]"
             >
               {/* Badge at Top - Outside the Card */}
               {plan.badge && (
@@ -231,7 +231,7 @@ const Pricing = () => {
                 </div>
               )}
               
-              <div className="p-6 flex flex-col flex-1">
+              <div className="p-5 flex flex-col flex-1">
                 {/* Plan Header */}
                 <div className="text-center font-bold">
                   <h3 className="font-display text-xl sm:text-2xl text-foreground mb-2">
@@ -263,49 +263,23 @@ const Pricing = () => {
                 <Button
                   variant="default"
                   size="sm"
-                  className="w-full text-xs mb-4"
+                  className="w-full text-xs"
                   onClick={() => handleSelectPlan(plan)}
                 >
                   Choose Plan
                 </Button>
 
-                {/* Prize Section */}
-                {plan.showPrize && (
-                  <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-lg p-3 mb-4 text-center">
-                    <div className="flex items-start justify-center mb-1">
-                      <Trophy className="w-4 h-4 text-primary mt-[2px]" />
-                      <span className="text-foreground font-bold text-sm">
-                        {plan.prizeText}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground text-xs">{plan.prizeNote}</p>
-                  </div>
-                )}
-
-                {/* Features List */}
-                <div className="space-y-1.5 flex-1">
-                  {plan.features.slice(0, 10).map((feature, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground text-xs leading-relaxed">
-                        {feature}
-                      </span>
-                    </div>
-                  ))}
-                  {plan.features.length > 10 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDetailsPlan(plan);
-                        setShowDetailsModal(true);
-                      }}
-                      className="text-xs text-primary font-semibold mt-2 flex items-center gap-1 hover:underline transition-all"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>View all {plan.features.length} features</span>
-                    </button>
-                  )}
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailsPlan(plan);
+                    setShowDetailsModal(true);
+                  }}
+                  className="text-xs text-primary font-semibold mt-3 mx-auto flex items-center gap-1 hover:underline transition-all"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>View Plan Details</span>
+                </button>
               </div>
             </div>
           ))}
@@ -315,20 +289,20 @@ const Pricing = () => {
       {/* Plan Details Modal */}
       {showDetailsModal && detailsPlan && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-background p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto">
+          <div className="bg-black border p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto">
             {/* Plan Header - Compact */}
-            <div className="text-center mb-4 pb-3 border-b border-border">
-              <h3 className="text-3xl font-bold">{detailsPlan.duration} Plan</h3>
+            <div className="text-center mb-4 pb-3 border-b border-yellow-600">
+              <h3 className="text-3xl font-bold text-white">{detailsPlan.duration} Plan</h3>
               <div className="flex items-center justify-center gap-2 mt-2">
-                <p className="text-muted-foreground text-sm line-through">
+                <p className="text-gray-400 text-sm line-through">
                   ₹{detailsPlan.actualPrice}
                 </p>
-                <p className="text-primary font-semibold text-3xl">
+                <p className="text-yellow-400 font-semibold text-3xl">
                   ₹{detailsPlan.offerPrice}
                 </p>
               </div>
-              <p className="text-primary text-xs mt-1">{detailsPlan.offerText}</p>
-              <p className="text-muted-foreground text-xs mt-0.5">
+              <p className="text-yellow-400 text-xs mt-1">{detailsPlan.offerText}</p>
+              <p className="text-gray-400 text-xs mt-0.5">
                 <Clock className="w-3 h-3 inline mr-1" />
                 {detailsPlan.offerValidity}
               </p>
@@ -336,33 +310,33 @@ const Pricing = () => {
 
             {/* Prize Section */}
             {detailsPlan.showPrize && (
-              <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-lg p-3 mb-4 text-center">
+              <div className="bg-yellow-500/10 border border-yellow-600/40 rounded-lg p-3 mb-4 text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <Trophy className="w-4 h-4 text-primary" />
-                  <span className="text-foreground font-bold text-sm">
+                  <Trophy className="w-4 h-4 text-yellow-400" />
+                  <span className="text-white font-bold text-sm">
                     {detailsPlan.prizeText}
                   </span>
                 </div>
-                <p className="text-muted-foreground text-xs">{detailsPlan.prizeNote}</p>
+                <p className="text-gray-300 text-xs">{detailsPlan.prizeNote}</p>
               </div>
             )}
 
             {/* Tagline */}
-            <p className="text-center text-foreground text-sm font-medium mb-4 bg-secondary/50 rounded-lg py-2 px-3">
+            <p className="text-center text-white text-sm font-medium mb-4 bg-yellow-500/10 rounded-lg py-2 px-3 border border-yellow-600/30">
               👉 {detailsPlan.tagline}
             </p>
 
             {/* All Features */}
             <div className="mb-4">
-              <h4 className="text-base font-semibold mb-3 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
+              <h4 className="text-base font-semibold mb-3 flex items-center gap-2 text-white">
+                <Sparkles className="w-4 h-4 text-yellow-400" />
                 Complete Features List:
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {detailsPlan.features.map((feature, index) => (
                   <div key={index} className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-muted-foreground text-sm leading-snug">
+                    <Check className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-300 text-sm leading-snug">
                       {feature}
                     </span>
                   </div>
@@ -374,7 +348,7 @@ const Pricing = () => {
             <div className="flex flex-col gap-3 mt-4 sm:flex-row">
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border-yellow-600 text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
                 onClick={() => {
                   setShowDetailsModal(false);
                   setDetailsPlan(null);
@@ -384,7 +358,7 @@ const Pricing = () => {
               </Button>
               <Button
                 variant="default"
-                className="w-full"
+                className="w-full bg-yellow-500 text-black hover:bg-yellow-400"
                 onClick={() => {
                   setShowDetailsModal(false);
                   setSelectedPlan(detailsPlan);
@@ -402,7 +376,7 @@ const Pricing = () => {
       {/* User Info Modal */}
       {showModal && selectedPlan && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-black border p-6 rounded-xl w-[90%] max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-black border p-6 rounded-xl w-[95%] max-w-2xl h-fit max-h-[calc(100vh-2rem)] overflow-y-auto">
             {/* Selected Plan Header */}
             <div className="text-center mb-4 pb-4 border-b border-yellow-600">
               <h3 className="text-2xl font-bold text-white">{selectedPlan.duration} Plan</h3>
@@ -475,7 +449,7 @@ const Pricing = () => {
             />
             <div className={`mb-3 p-3 bg-black border-2 rounded ${getFieldBorderClass("goal", goal.length > 0 ? "selected" : "")}`}>
               <label className="block text-white mb-2">Fitness Goal * (Select multiple)</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {goalOptions.map((option) => (
                   <label key={option} className="flex items-center gap-2 text-gray-300 cursor-pointer">
                     <input

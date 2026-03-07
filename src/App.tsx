@@ -23,6 +23,12 @@ const PricingManagement = lazy(() =>
     default: mod.PricingManagement,
   }))
 );
+
+const TestimonialManagement = lazy(() =>
+  import("./components/admin/TestimonialManagement").then((mod) => ({
+    default: mod.TestimonialManagement,
+  }))
+);
 const AdminPortal = lazy(() => import("./admin/AdminPortal"));
 const AdminDashboard = lazy(() => import("./admin/pages/Dashboard"));
 const AdminPricing = lazy(() => import("./admin/pages/Pricing"));

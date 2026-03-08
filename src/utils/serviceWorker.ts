@@ -3,7 +3,7 @@ export class ServiceWorkerManager {
   private registration: ServiceWorkerRegistration | null = null;
   private updateAvailable = false;
   private updateCallbacks: ((registration: ServiceWorkerRegistration) => void)[] = [];
-  private currentVersion = 'balanzed-v0.0.1'; // Should match CACHE_VERSION in sw.js
+  private currentVersion = 'balanzed-v0.1.1'; // Should match CACHE_VERSION in sw.js
 
   constructor() {
     this.loadStoredVersion();

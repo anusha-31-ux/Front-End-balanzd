@@ -125,3 +125,36 @@ export interface PricingPlan {
   createdAt?: string;
   updatedAt?: string;
 }
+
+/**
+ * Banner Type
+ */
+export interface Banner {
+  _id?: string;
+  message: string;
+  isVisible: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Banner Service
+ * Handles banner operations
+ */
+export const bannerService = {
+  /**
+   * Get the current banner
+   */
+  get: async (): Promise<Banner | null> => {
+    const response = await api.get<{ success: boolean; data: Banner | null }>(endpoints.public.banner);
+    return response.data;
+  },
+
+  /**
+   * Update the banner
+   */
+  update: async (data: { message: string; isVisible: boolean }): Promise<Banner> => {
+    const response = await api.put<{ success: boolean; data: Banner }>(endpoints.admin.banner.edit, data);
+    return response.data;
+  },
+};

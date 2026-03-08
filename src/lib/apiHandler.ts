@@ -242,9 +242,18 @@ export const endpoints = {
       byId: (id: string) => `/api/pricing/admin/plans/${id}`,
       toggleStatus: (id: string) => `/api/pricing/admin/plans/${id}/toggle-status`,
     },
+    personalTraining: {
+      base: '/api/personal-training/admin',
+      services: '/api/personal-training/admin/services',
+      byId: (id: string) => `/api/personal-training/admin/services/${id}`,
+      toggleStatus: (id: string) => `/api/personal-training/admin/services/${id}/toggle-status`,
+    },
     razorpay: {
       transactions: '/api/razorpay/admin/transaction-list',
       exportTransactions: '/api/razorpay/admin/transactions/download',
+    },
+    banner: {
+      edit: '/api/editbanner',
     },
   },
   public: {
@@ -255,10 +264,15 @@ export const endpoints = {
       plans: '/api/pricing/plans',
       byId: (id: string) => `/api/pricing/plans/${id}`,
     },
+    personalTraining: {
+      services: '/api/personal-training/services',
+      byId: (id: string) => `/api/personal-training/services/${id}`,
+    },
     razorpay: {
       config: '/api/razorpay/config',
       createOrder: '/api/razorpay/create-order',
       verifyPayment: '/api/razorpay/verify',
     },
+    banner: '/api/banner',
   },
 } as const;

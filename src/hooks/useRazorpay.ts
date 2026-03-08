@@ -14,9 +14,19 @@ export interface PaymentParams {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  instagramId:string;
-  health:string;
-  goal:string;
+  instagramId: string;
+  age: string;
+  gender: string;
+  weight: string;
+  height: string;
+  healthConcerns: string;
+  injuries: string;
+  foodAllergies: string;
+  dietExperience: string;
+  fitnessGoals: string;
+  selectedTrainer: string;
+  health: string;
+  goal: string;
 }
 
 export interface RazorpayOrderResponse {
@@ -58,6 +68,16 @@ export const useRazorpay = () => {
     customerEmail,
     customerPhone,
     instagramId,
+    age,
+    gender,
+    weight,
+    height,
+    healthConcerns,
+    injuries,
+    foodAllergies,
+    dietExperience,
+    fitnessGoals,
+    selectedTrainer,
     health,
     goal
   }: PaymentParams) => {
@@ -79,6 +99,16 @@ export const useRazorpay = () => {
         customerEmail,
         customerPhone,
         instagramId,
+        age,
+        gender,
+        weight,
+        height,
+        healthConcerns,
+        injuries,
+        foodAllergies,
+        dietExperience,
+        fitnessGoals,
+        selectedTrainer,
         health,
         goal
       });
@@ -98,9 +128,6 @@ export const useRazorpay = () => {
           name: customerName,
           email: customerEmail,
           contact: customerPhone,
-          instagramId: instagramId,
-          health : health,
-          goal: goal,
         },
         theme: {
           color: "#E53935",

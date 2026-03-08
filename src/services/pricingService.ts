@@ -17,21 +17,29 @@ export const pricingService = {
    * @returns Array of active pricing plans
    */
   async getPlans(): Promise<PricingPlan[]> {
-    try {
-      const response = await api.get<ApiResponse<PricingPlan[]>>(endpoints.public.pricing.plans);
-      
-      if (response.success && response.data) {
-        // Filter active plans and sort by display order
-        return response.data
-          .filter((plan) => plan.isActive)
-          .sort((a, b) => a.displayOrder - b.displayOrder);
-      }
-      
-      return [];
-    } catch (error) {
-      console.error("Error fetching plans:", error);
-      throw new Error("Failed to fetch pricing plans");
+    const response = await api.get<ApiResponse<PricingPlan[]>>(endpoints.public.pricing.plans);
+    
+    if (response.success && response.data) {
+      // Filter active plans and sort by display order (fallback to created date or id)
+      return response.data
+        .filter((plan) => plan.isActive !== false)
+        .map(plan => ({
+          ...plan,
+          features: plan.features || [],
+          tagline: plan.tagline || "",
+          displayOrder: plan.displayOrder || 0,
+          durationMonths: plan.durationMonths || 1,
+        }))
+        .sort((a, b) => {
+          if (a.displayOrder && b.displayOrder) {
+            return a.displayOrder - b.displayOrder;
+          }
+          // Fallback sorting by id or created date
+          return a.id.localeCompare(b.id);
+        });
     }
+    
+    return [];
   },
 
   /**
@@ -39,19 +47,27 @@ export const pricingService = {
    * @returns Array of all pricing plans
    */
   async getAllPlans(): Promise<PricingPlan[]> {
-    try {
-      const response = await api.get<ApiResponse<PricingPlan[]>>(`${endpoints.admin.pricing.plans}?includeInactive=true`);
-      
-      if (response.success && response.data) {
-        // Sort by display order
-        return response.data.sort((a, b) => a.displayOrder - b.displayOrder);
-      }
-      
-      return [];
-    } catch (error) {
-      console.error("Error fetching all plans:", error);
-      throw new Error("Failed to fetch all pricing plans");
+    const response = await api.get<ApiResponse<PricingPlan[]>>(`${endpoints.admin.pricing.plans}?includeInactive=true`);
+    
+    if (response.success && response.data) {
+      // Sort by display order (fallback to id) and add default values for missing fields
+      return response.data
+        .map(plan => ({
+          ...plan,
+          features: plan.features || [],
+          tagline: plan.tagline || "",
+          displayOrder: plan.displayOrder || 0,
+          durationMonths: plan.durationMonths || 1,
+        }))
+        .sort((a, b) => {
+          if (a.displayOrder && b.displayOrder) {
+            return a.displayOrder - b.displayOrder;
+          }
+        return a.id.localeCompare(b.id);
+      });
     }
+    
+    return [];
   },
 
   /**

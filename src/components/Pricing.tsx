@@ -27,12 +27,11 @@ const Pricing = () => {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
-  const [detailsPlan, setDetailsPlan] = useState<PricingPlan | null>(null);
   const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay();
 
   // User input state
   const [showModal, setShowModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showBasicsModal, setShowBasicsModal] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -210,8 +209,14 @@ const Pricing = () => {
           <h2 className="font-display text-4xl md:text-6xl text-foreground mt-4">
             CHOOSE YOUR <span className="text-primary">PLAN</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mt-4">
+          <p className="text-muted-foreground max-w-2xl mx-auto mt-4 flex items-center justify-center gap-2">
             Flexible membership options to fit your goals and budget.
+            <button
+              onClick={() => setShowBasicsModal(true)}
+              className="text-primary font-semibold hover:underline transition-all"
+            >
+              Know More
+            </button>
           </p>
         </div>
 
@@ -268,110 +273,92 @@ const Pricing = () => {
                 >
                   Choose Plan
                 </Button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDetailsPlan(plan);
-                    setShowDetailsModal(true);
-                  }}
-                  className="text-xs text-primary font-semibold mt-3 mx-auto flex items-center gap-1 hover:underline transition-all"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>View Plan Details</span>
-                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Plan Details Modal */}
-      {showDetailsModal && detailsPlan && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-black border p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto">
-            {/* Plan Header - Compact */}
-            <div className="text-center mb-4 pb-3 border-b border-yellow-600">
-              <h3 className="text-3xl font-bold text-white">{detailsPlan.duration} Plan</h3>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <p className="text-gray-400 text-sm line-through">
-                  ₹{detailsPlan.actualPrice}
-                </p>
-                <p className="text-yellow-400 font-semibold text-3xl">
-                  ₹{detailsPlan.offerPrice}
+      {/* BALANZED Basics Modal */}
+      <Dialog open={showBasicsModal} onOpenChange={setShowBasicsModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-center">
+              BALANZED Basics (Budget-Friendly Program)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4 text-foreground">
+            <p className="text-muted-foreground">
+              A structured program designed to help you build consistency, learn the fundamentals of fitness, and create sustainable results from home.
+            </p>
+            
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Daily Live Workouts with Flexible Timings</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Morning: 6:00 AM – 12:00 PM<br />
+                  Evening: 4:00 PM – 8:00 PM
                 </p>
               </div>
-              <p className="text-yellow-400 text-xs mt-1">{detailsPlan.offerText}</p>
-              <p className="text-gray-400 text-xs mt-0.5">
-                <Clock className="w-3 h-3 inline mr-1" />
-                {detailsPlan.offerValidity}
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Workout Structure</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Monday, Wednesday, Friday – Strength Training<br />
+                  Tuesday, Thursday – Yoga & Mobility
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Complete Home Workout Program</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Designed for all fitness levels — no gym required.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• BALANZED Tracker</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Track your workouts, habits, and progress to help you stay consistent and move closer to your goals.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Community Support Page</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Ask questions, clear doubts, and stay motivated with guidance from our team and the BALANZED community.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Education-Based Approach</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Short education videos to help you understand the basics of fitness and nutrition.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Learn → Execute → Improve System</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Understand the fundamentals, apply them in your routine, and gradually improve your results.
+                </p>
+              </div>
+            </div>
+            
+            <hr className="border-border" />
+            
+            <div className="bg-secondary/30 p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground italic">
+                Thousands of people struggle with fitness because they lack structure and consistency.
+                BALANZED Basics is designed to give you exactly that — a simple system you can follow every day to finally see progress.
+              </p>
+              <p className="text-sm font-semibold text-foreground mt-2">
+                All you need to do is start and stay consistent.
               </p>
             </div>
-
-            {/* Prize Section */}
-            {detailsPlan.showPrize && (
-              <div className="bg-yellow-500/10 border border-yellow-600/40 rounded-lg p-3 mb-4 text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <Trophy className="w-4 h-4 text-yellow-400" />
-                  <span className="text-white font-bold text-sm">
-                    {detailsPlan.prizeText}
-                  </span>
-                </div>
-                <p className="text-gray-300 text-xs">{detailsPlan.prizeNote}</p>
-              </div>
-            )}
-
-            {/* Tagline */}
-            <p className="text-center text-white text-sm font-medium mb-4 bg-yellow-500/10 rounded-lg py-2 px-3 border border-yellow-600/30">
-              👉 {detailsPlan.tagline}
-            </p>
-
-            {/* All Features */}
-            <div className="mb-4">
-              <h4 className="text-base font-semibold mb-3 flex items-center gap-2 text-white">
-                <Sparkles className="w-4 h-4 text-yellow-400" />
-                Complete Features List:
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                {detailsPlan.features.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 text-sm leading-snug">
-                      {feature}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3 mt-4 sm:flex-row">
-              <Button
-                variant="outline"
-                className="w-full border-yellow-600 text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setDetailsPlan(null);
-                }}
-              >
-                Close
-              </Button>
-              <Button
-                variant="default"
-                className="w-full bg-yellow-500 text-black hover:bg-yellow-400"
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setSelectedPlan(detailsPlan);
-                  setDetailsPlan(null);
-                  setShowModal(true);
-                }}
-              >
-                Select This Plan
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* User Info Modal */}
       {showModal && selectedPlan && (

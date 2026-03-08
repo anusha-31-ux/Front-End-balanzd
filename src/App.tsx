@@ -32,8 +32,10 @@ const TestimonialManagement = lazy(() =>
 const AdminPortal = lazy(() => import("./admin/AdminPortal"));
 const AdminDashboard = lazy(() => import("./admin/pages/Dashboard"));
 const AdminPricing = lazy(() => import("./admin/pages/Pricing"));
+const AdminPersonalTraining = lazy(() => import("./admin/pages/PersonalTraining"));
 const AdminTestimonials = lazy(() => import("./admin/pages/Testimonials"));
 const AdminRazorpay = lazy(() => import("./admin/pages/transaction"));
+const AdminPromoBanner = lazy(() => import("./admin/pages/PromoBanner"));
 
 const queryClient = new QueryClient();
 
@@ -51,8 +53,10 @@ const App = () => (
             <Route path="/login/admin-portal" element={<AdminPortal />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/pricing" element={<ProtectedRoute><AdminPricing /></ProtectedRoute>} />
+            <Route path="/admin/personal-training" element={<ProtectedRoute><AdminPersonalTraining /></ProtectedRoute>} />
             <Route path="/admin/testimonials" element={<ProtectedRoute><AdminTestimonials /></ProtectedRoute>} />
             <Route path="/admin/razorpay" element={<ProtectedRoute><AdminRazorpay /></ProtectedRoute>} />
+            <Route path="/admin/promo-banner" element={<ProtectedRoute><AdminPromoBanner /></ProtectedRoute>} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />

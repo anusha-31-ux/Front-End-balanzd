@@ -45,7 +45,6 @@ export const PricingManagement = () => {
   // State for form
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [featureInput, setFeatureInput] = useState("");
 
   // State for tracking touched fields
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -57,19 +56,11 @@ export const PricingManagement = () => {
   // Form data state
   const [formData, setFormData] = useState<Partial<CreatePricingPlanInput>>({
     duration: "",
-    durationMonths: 1,
     badge: "",
-    showPrize: false,
-    prizeText: "",
-    prizeNote: "",
     actualPrice: 0,
     offerPrice: 0,
     offerText: "",
     offerValidity: "",
-    features: [],
-    tagline: "",
-    displayOrder: 0,
-    isActive: true,
   });
 
   // Load plans when component mounts
@@ -81,9 +72,6 @@ export const PricingManagement = () => {
   const isFormValid = useMemo(() => {
     return !!
       formData.duration &&
-      formData.tagline &&
-      formData.features &&
-      formData.features.length > 0 &&
       formData.actualPrice &&
       formData.actualPrice > 0 &&
       formData.offerPrice &&
@@ -142,39 +130,13 @@ export const PricingManagement = () => {
   };
 
   /**
-   * Add a feature to the current plan being edited
-   */
-  const handleAddFeature = () => {
-    if (featureInput.trim()) {
-      setFormData({
-        ...formData,
-        features: [...(formData.features || []), featureInput],
-      });
-      setFeatureInput("");
-    }
-  };
-
-  /**
-   * Remove a feature from the plan
-   */
-  const handleRemoveFeature = (index: number) => {
-    const newFeatures = (formData.features || []).filter((_, i) => i !== index);
-    setFormData({ ...formData, features: newFeatures });
-  };
-
-  /**
    * Save the plan (create or update)
    */
   const handleSavePlan = async () => {
     try {
       // Validate required fields
-      if (!formData.duration || !formData.tagline) {
-        toast.error("Please fill all required fields (Duration and Tagline)");
-        return;
-      }
-
-      if (!formData.features || formData.features.length === 0) {
-        toast.error("Please add at least one feature");
+      if (!formData.duration) {
+        toast.error("Please enter a duration");
         return;
       }
 
@@ -185,19 +147,11 @@ export const PricingManagement = () => {
 
       const submitData = {
         duration: formData.duration,
-        durationMonths: formData.durationMonths || 1,
         badge: formData.badge || "",
-        showPrize: formData.showPrize === true, // Always send as boolean
-        prizeText: formData.showPrize ? (formData.prizeText || "") : "",
-        prizeNote: formData.showPrize ? (formData.prizeNote || "") : "",
         actualPrice: formData.actualPrice,
         offerPrice: formData.offerPrice,
         offerText: formData.offerText || "",
         offerValidity: formData.offerValidity || "",
-        features: formData.features,
-        tagline: formData.tagline,
-        displayOrder: formData.displayOrder || plans.length + 1,
-        isActive: formData.isActive !== false,
       };
 
       if (editingId) {
@@ -419,15 +373,15 @@ export const PricingManagement = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Duration:</span>
-                  <span className="font-semibold">{plan.durationMonths}mo</span>
+                  <span className="font-semibold">{plan.durationMonths || 1}mo</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Features:</span>
-                  <span className="font-semibold">{plan.features.length}</span>
+                  <span className="font-semibold">{plan.features?.length || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Display Order:</span>
-                  <span className="font-semibold">{plan.displayOrder}</span>
+                  <span className="font-semibold">{plan.displayOrder || 0}</span>
                 </div>
               </div>
 
@@ -526,71 +480,7 @@ export const PricingManagement = () => {
                       className="mt-1"
                     />
                   </div>
-
-                  {/* Active Status */}
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                      <Label className="text-sm">Active Status</Label>
-                      <div className="flex items-center gap-2 mt-2 p-2 border border-border rounded">
-                        <Switch
-                          checked={formData.isActive !== false}
-                          onCheckedChange={(checked) =>
-                            setFormData({ ...formData, isActive: checked })
-                          }
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          {formData.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
-
-              {/* ===== PRIZE SECTION ===== */}
-              <div className="space-y-3 border-b border-border pb-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-foreground">Prize Information</h3>
-                  <Switch
-                    checked={formData.showPrize || false}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, showPrize: checked })
-                    }
-                  />
-                </div>
-
-                {formData.showPrize && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-secondary/20 p-4 rounded">
-                    <div>
-                      <Label htmlFor="prizeText" className="text-sm">
-                        Prize Text
-                      </Label>
-                      <Input
-                        id="prizeText"
-                        value={formData.prizeText || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, prizeText: e.target.value })
-                        }
-                        placeholder="e.g., Eligible for ₹3,00,000 Cash Prize"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="prizeNote" className="text-sm">
-                        Prize Note
-                      </Label>
-                      <Input
-                        id="prizeNote"
-                        value={formData.prizeNote || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, prizeNote: e.target.value })
-                        }
-                        placeholder="e.g., (*Details in Challenge Policy)"
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* ===== PRICING SECTION ===== */}
@@ -674,92 +564,6 @@ export const PricingManagement = () => {
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* ===== TAGLINE SECTION ===== */}
-              <div className="space-y-3 border-b border-border pb-4">
-                <Label htmlFor="tagline" className="text-sm font-semibold">
-                  Tagline *
-                </Label>
-                <Textarea
-                  id="tagline"
-                  value={formData.tagline || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tagline: e.target.value })
-                  }
-                  onBlur={() => setTouched({ ...touched, tagline: true })}
-                  placeholder="e.g., Best plan for long-term lifestyle change and consistency"
-                  className={`${touched.tagline && !formData.tagline ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                  rows={2}
-                />
-              </div>
-
-              {/* ===== FEATURES SECTION ===== */}
-              <div className={`space-y-3 border-b pb-4 ${touched.features && (!formData.features || formData.features.length === 0) ? 'border-destructive' : 'border-border'}`}>
-                <h3 className="font-semibold text-foreground">Features *</h3>
-                <div className="flex gap-2 mb-3">
-                  <Input
-                    value={featureInput}
-                    onChange={(e) => setFeatureInput(e.target.value)}
-                    onBlur={() => setTouched({ ...touched, features: true })}
-                    placeholder="Enter a feature (e.g., Daily LIVE Workout Sessions)"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddFeature();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleAddFeature} size="sm">
-                    Add Feature
-                  </Button>
-                </div>
-
-                {/* Features List */}
-                <div className="space-y-2">
-                  {(formData.features || []).length > 0 ? (
-                    (formData.features || []).map((feature, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-secondary/30 p-3 rounded border border-border"
-                      >
-                        <span className="text-sm">{feature}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveFeature(index)}
-                          className="text-destructive hover:bg-destructive/10"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className={`text-sm ${touched.features ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {touched.features ? 'Please add at least one feature' : 'No features added yet. Add some features to get started.'}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* ===== DISPLAY ORDER SECTION ===== */}
-              <div className="space-y-3 border-b border-border pb-4">
-                <Label htmlFor="displayOrder" className="text-sm font-semibold">
-                  Display Order (1 = First, 2 = Second, 3 = Third, etc.)
-                </Label>
-                <Input
-                  id="displayOrder"
-                  type="number"
-                  value={formData.displayOrder || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      displayOrder: parseInt(e.target.value),
-                    })
-                  }
-                  placeholder="1"
-                  className="mt-1"
-                />
               </div>
 
               {/* ===== FORM ACTIONS ===== */}

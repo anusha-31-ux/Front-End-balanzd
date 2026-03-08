@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Star, Clock, Users } from "lucide-react";
+import { Check, Loader2, Star, Clock, Users, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { personalTrainingService } from "@/services/personalTrainingService";
@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 /**
  * Personal Training Section Component
@@ -586,7 +587,16 @@ const PersonalTraining = () => {
       {/* Consultation Booking Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-border p-6 rounded-xl w-[95%] max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-card border border-border p-6 rounded-xl w-[95%] max-w-4xl max-h-[90vh] overflow-y-auto relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary/50 transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+
             {/* Selected Service Header */}
             <div className="text-center mb-6 pb-4 border-b border-border">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-3">
@@ -602,34 +612,12 @@ const PersonalTraining = () => {
                 }
               </p>
 
-              {/* Program Pricing */}
-              <div className="mt-6 grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                <div className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-2">3-Month Program</div>
-                  {selectedService ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl text-muted-foreground line-through">₹{selectedService.originalPrice.toLocaleString()}</span>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                          Save {Math.round(((selectedService.originalPrice - selectedService.offerPrice) / selectedService.originalPrice) * 100)}%
-                        </span>
-                      </div>
-                      <div className="text-3xl font-bold text-primary">₹{selectedService.offerPrice.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">for {selectedService.duration}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-3xl font-bold text-primary">₹25,000</div>
-                      <div className="text-xs text-muted-foreground">for 3 months (12 weeks)</div>
-                    </>
-                  )}
-                </div>
-
-                <div className="p-4 bg-secondary/50 border border-border rounded-lg">
+              {/* Consultation Fee */}
+              <div className="mt-6 max-w-xs mx-auto">
+                <div className="p-4 bg-secondary/50 border border-border rounded-lg text-center">
                   <div className="text-sm text-muted-foreground mb-2">Consultation Fee</div>
                   <div className="text-2xl font-bold text-foreground">₹500</div>
                   <div className="text-xs text-muted-foreground">One-time payment to book consultation</div>
-                  <div className="text-xs text-green-600 mt-1">Refundable if you don't proceed</div>
                 </div>
               </div>
             </div>
@@ -642,96 +630,128 @@ const PersonalTraining = () => {
               <div className="space-y-4">
                 <h5 className="font-medium text-foreground border-b pb-2">Basic Information</h5>
                 
-                <input
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("name", customerName)}`}
-                  placeholder="Full Name *"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  onBlur={() => handleFieldBlur("name")}
-                  required
-                />
+                <div>
+                  <Label htmlFor="fullName" className="text-sm font-medium text-foreground">Full Name *</Label>
+                  <input
+                    id="fullName"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("name", customerName)}`}
+                    placeholder="Enter your full name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    onBlur={() => handleFieldBlur("name")}
+                    required
+                  />
+                </div>
 
-                <input
-                  type="email"
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("email", customerEmail)}`}
-                  placeholder="Email Address *"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  onBlur={() => handleFieldBlur("email")}
-                  required
-                />
+                <div>
+                  <Label htmlFor="email" className="text-sm font-medium text-foreground">Email Address *</Label>
+                  <input
+                    id="email"
+                    type="email"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("email", customerEmail)}`}
+                    placeholder="Enter your email address"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    onBlur={() => handleFieldBlur("email")}
+                    required
+                  />
+                </div>
 
-                <input
-                  type="tel"
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("phone", customerPhone)}`}
-                  placeholder="WhatsApp Number (10 digits) *"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value.slice(0, 10).replace(/\D/g, ""))}
-                  onBlur={() => handleFieldBlur("phone")}
-                  maxLength={10}
-                  pattern="[0-9]{10}"
-                  title="Please enter a valid 10-digit mobile number"
-                  required
-                />
+                <div>
+                  <Label htmlFor="phone" className="text-sm font-medium text-foreground">WhatsApp Number *</Label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("phone", customerPhone)}`}
+                    placeholder="Enter 10-digit mobile number"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value.slice(0, 10).replace(/\D/g, ""))}
+                    onBlur={() => handleFieldBlur("phone")}
+                    maxLength={10}
+                    pattern="[0-9]{10}"
+                    title="Please enter a valid 10-digit mobile number"
+                    required
+                  />
+                </div>
 
-                <input
-                  type="number"
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("age", age)}`}
-                  placeholder="Age *"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  onBlur={() => handleFieldBlur("age")}
-                  min="1"
-                  max="120"
-                  required
-                />
+                <div>
+                  <Label htmlFor="age" className="text-sm font-medium text-foreground">Age *</Label>
+                  <input
+                    id="age"
+                    type="number"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("age", age)}`}
+                    placeholder="Enter your age"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    onBlur={() => handleFieldBlur("age")}
+                    min="1"
+                    max="120"
+                    required
+                  />
+                </div>
 
-                <select
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("gender", gender)}`}
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  onBlur={() => handleFieldBlur("gender")}
-                  required
-                >
-                  <option value="">Select Gender *</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
+                <div>
+                  <Label htmlFor="gender" className="text-sm font-medium text-foreground">Gender *</Label>
+                  <select
+                    id="gender"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("gender", gender)}`}
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    onBlur={() => handleFieldBlur("gender")}
+                    required
+                  >
+                    <option value="">Select your gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
               </div>
 
               {/* Physical Information */}
               <div className="space-y-4">
                 <h5 className="font-medium text-foreground border-b pb-2">Physical Information</h5>
 
-                <input
-                  type="number"
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("weight", weight)}`}
-                  placeholder="Current Weight (kg) *"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  onBlur={() => handleFieldBlur("weight")}
-                  min="1"
-                  max="300"
-                  step="0.1"
-                  required
-                />
+                <div>
+                  <Label htmlFor="weight" className="text-sm font-medium text-foreground">Current Weight (kg) *</Label>
+                  <input
+                    id="weight"
+                    type="number"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("weight", weight)}`}
+                    placeholder="Enter your current weight"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    onBlur={() => handleFieldBlur("weight")}
+                    min="1"
+                    max="300"
+                    step="0.1"
+                    required
+                  />
+                </div>
 
-                <input
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${getFieldBorderClass("height", height)}`}
-                  placeholder="Height (e.g., 5'8 or 172cm) *"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  onBlur={() => handleFieldBlur("height")}
-                  required
-                />
+                <div>
+                  <Label htmlFor="height" className="text-sm font-medium text-foreground">Height *</Label>
+                  <input
+                    id="height"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1 ${getFieldBorderClass("height", height)}`}
+                    placeholder="e.g., 5'8 or 172cm"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    onBlur={() => handleFieldBlur("height")}
+                    required
+                  />
+                </div>
 
-                <input
-                  className="w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  placeholder="Instagram ID (Optional)"
-                  value={instagramId}
-                  onChange={(e) => setInstagramId(e.target.value)}
-                />
+                <div>
+                  <Label htmlFor="instagram" className="text-sm font-medium text-foreground">Instagram ID</Label>
+                  <input
+                    id="instagram"
+                    className="w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1"
+                    placeholder="Enter your Instagram ID (optional)"
+                    value={instagramId}
+                    onChange={(e) => setInstagramId(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -740,58 +760,78 @@ const PersonalTraining = () => {
               <h5 className="font-medium text-foreground border-b pb-2">Health & Fitness Information</h5>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <textarea
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none ${getFieldBorderClass("healthConcerns", healthConcerns)}`}
-                  placeholder="Health Concerns * (e.g., diabetes, hypertension, thyroid issues)"
-                  value={healthConcerns}
-                  onChange={(e) => setHealthConcerns(e.target.value)}
-                  onBlur={() => handleFieldBlur("healthConcerns")}
-                  rows={2}
-                  required
-                />
+                <div>
+                  <Label htmlFor="healthConcerns" className="text-sm font-medium text-foreground">Health Concerns *</Label>
+                  <textarea
+                    id="healthConcerns"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mt-1 ${getFieldBorderClass("healthConcerns", healthConcerns)}`}
+                    placeholder="e.g., diabetes, hypertension, thyroid issues"
+                    value={healthConcerns}
+                    onChange={(e) => setHealthConcerns(e.target.value)}
+                    onBlur={() => handleFieldBlur("healthConcerns")}
+                    rows={2}
+                    required
+                  />
+                </div>
 
-                <textarea
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none ${getFieldBorderClass("injuries", injuries)}`}
-                  placeholder="Current Injuries or Pain Areas * (e.g., knee pain, back issues)"
-                  value={injuries}
-                  onChange={(e) => setInjuries(e.target.value)}
-                  onBlur={() => handleFieldBlur("injuries")}
-                  rows={2}
-                  required
-                />
+                <div>
+                  <Label htmlFor="injuries" className="text-sm font-medium text-foreground">Current Injuries or Pain Areas *</Label>
+                  <textarea
+                    id="injuries"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mt-1 ${getFieldBorderClass("injuries", injuries)}`}
+                    placeholder="e.g., knee pain, back issues"
+                    value={injuries}
+                    onChange={(e) => setInjuries(e.target.value)}
+                    onBlur={() => handleFieldBlur("injuries")}
+                    rows={2}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <textarea
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none ${getFieldBorderClass("foodAllergies", foodAllergies)}`}
-                  placeholder="Food Allergies or Restrictions * (e.g., nuts, dairy, gluten)"
-                  value={foodAllergies}
-                  onChange={(e) => setFoodAllergies(e.target.value)}
-                  onBlur={() => handleFieldBlur("foodAllergies")}
-                  rows={2}
-                  required
-                />
+                <div>
+                  <Label htmlFor="foodAllergies" className="text-sm font-medium text-foreground">Food Allergies or Restrictions *</Label>
+                  <textarea
+                    id="foodAllergies"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mt-1 ${getFieldBorderClass("foodAllergies", foodAllergies)}`}
+                    placeholder="e.g., nuts, dairy, gluten"
+                    value={foodAllergies}
+                    onChange={(e) => setFoodAllergies(e.target.value)}
+                    onBlur={() => handleFieldBlur("foodAllergies")}
+                    rows={2}
+                    required
+                  />
+                </div>
 
+                <div>
+                  <Label htmlFor="dietExperience" className="text-sm font-medium text-foreground">Diet Experience *</Label>
+                  <textarea
+                    id="dietExperience"
+                    className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mt-1 ${getFieldBorderClass("dietExperience", dietExperience)}`}
+                    placeholder="e.g., vegetarian, keto, intermittent fasting"
+                    value={dietExperience}
+                    onChange={(e) => setDietExperience(e.target.value)}
+                    onBlur={() => handleFieldBlur("dietExperience")}
+                    rows={2}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="fitnessGoals" className="text-sm font-medium text-foreground">Fitness Goals *</Label>
                 <textarea
-                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none ${getFieldBorderClass("dietExperience", dietExperience)}`}
-                  placeholder="Diet Experience * (e.g., vegetarian, keto, intermittent fasting)"
-                  value={dietExperience}
-                  onChange={(e) => setDietExperience(e.target.value)}
-                  onBlur={() => handleFieldBlur("dietExperience")}
+                  id="fitnessGoals"
+                  className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mt-1 ${getFieldBorderClass("fitnessGoals", fitnessGoals)}`}
+                  placeholder="e.g., weight loss, muscle gain, improve endurance, sports performance"
+                  value={fitnessGoals}
+                  onChange={(e) => setFitnessGoals(e.target.value)}
+                  onBlur={() => handleFieldBlur("fitnessGoals")}
                   rows={2}
                   required
                 />
               </div>
-
-              <textarea
-                className={`w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none ${getFieldBorderClass("fitnessGoals", fitnessGoals)}`}
-                placeholder="Fitness Goals * (e.g., weight loss, muscle gain, improve endurance, sports performance)"
-                value={fitnessGoals}
-                onChange={(e) => setFitnessGoals(e.target.value)}
-                onBlur={() => handleFieldBlur("fitnessGoals")}
-                rows={2}
-                required
-              />
             </div>
 
             {/* Trainer Selection */}
@@ -845,9 +885,11 @@ const PersonalTraining = () => {
 
             {/* Additional Message */}
             <div className="mt-6">
+              <Label htmlFor="additionalMessage" className="text-sm font-medium text-foreground">Additional Message</Label>
               <textarea
-                className="w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                placeholder="Additional Message (Optional)"
+                id="additionalMessage"
+                className="w-full px-3 py-2 bg-background border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mt-1"
+                placeholder="Any additional information or questions (optional)"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={2}

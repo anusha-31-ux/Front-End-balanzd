@@ -238,7 +238,7 @@ export const endpoints = {
     },
     pricing: {
       base: '/api/pricing/admin',
-      plans: '/api/pricing/plans',
+      plans: '/api/pricing/admin/plans',
       byId: (id: string) => `/api/pricing/admin/plans/${id}`,
       toggleStatus: (id: string) => `/api/pricing/admin/plans/${id}/toggle-status`,
     },

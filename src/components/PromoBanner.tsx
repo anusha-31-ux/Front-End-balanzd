@@ -32,7 +32,7 @@ const PromoBanner = () => {
   if (loading || !isVisible || !banner) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary via-primary/90 to-primary py-3 px-4 animate-fade-in">
+    <div className="relative bg-gradient-to-r from-primary via-primary/90 to-primary py-3 px-4 animate-fade-in">
       <div className="container-custom mx-auto flex items-center justify-center gap-3 text-primary-foreground">
         <Gift className="w-5 h-5 animate-bounce" />
         <p className="text-sm md:text-base font-semibold text-center">

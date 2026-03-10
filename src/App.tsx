@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import PageLoader from "./components/PageLoader";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { UpdateNotification } from "./components/UpdateNotification";
+import { NeedHelpWidget } from "./components/NeedHelpWidget";
 
 // Lazy load policy pages
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        <NeedHelpWidget />
       </BrowserRouter>
       <UpdateNotification />
     </TooltipProvider>

@@ -24,7 +24,7 @@ const Navbar = () => {
     { href: "#home", label: "Home" },
     { href: "#about", label: "About" },
     // { href: "#services", label: "Services" },
-    { href: "#programs", label: "Programs" },
+    { href: "#personal-training", label: "Personal Training" },
     { href: "#trainers", label: "Trainers" },
     { href: "#pricing", label: "Pricing" },
     { href: "#contact", label: "Contact" },

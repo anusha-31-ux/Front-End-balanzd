@@ -3,7 +3,7 @@ import { Check, Loader2, Star, Clock, Users, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { personalTrainingService } from "@/services/personalTrainingService";
-import { PersonalTraining } from "@/types/personalTraining";
+import type { PersonalTraining } from "@/types/personalTraining";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import {
   Dialog,
@@ -146,7 +146,7 @@ const PersonalTraining = () => {
       // Initiate Razorpay payment for ₹500 consultation
       await initiatePayment({
         amount: 500, // ₹500 for consultation
-        planName: selectedService ? `Consultation - ${selectedService.title}` : "Personal Training Consultation",
+        planName: selectedService ? `Consultation - ${selectedService.name}` : "Personal Training Consultation",
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim(),
         customerPhone: customerPhone.trim(),
@@ -438,7 +438,7 @@ const PersonalTraining = () => {
                       <Users className="w-6 h-6 text-primary" />
                     </div>
                     <h3 className="font-display text-xl sm:text-2xl text-foreground mb-2">
-                      {service.name || service.title || "Personal Training Service"}
+                      {service.name || "Personal Training Service"}
                     </h3>
                     <div className="flex items-center justify-center gap-1 text-sm text-primary font-medium">
                       <Star className="w-4 h-4 fill-current" />
@@ -473,6 +473,31 @@ const PersonalTraining = () => {
                     )}
                     <div className="text-sm text-muted-foreground">
                       for {service.duration || "3 Months"}
+                    </div>
+                  </div>
+
+                  {/* Additional Price Option */}
+                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4 mb-4 text-center">
+                    <div className="text-sm text-muted-foreground mb-1">
+                      {service.secondaryName || "Premium Package"}
+                    </div>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      {(service.secondaryOriginalPrice || service.originalPrice || 0) > (service.secondaryOfferPrice || service.offerPrice || 0) && (
+                        <div className="text-xl text-muted-foreground line-through">
+                          ₹{(service.secondaryOriginalPrice || service.originalPrice || 0).toLocaleString()}
+                        </div>
+                      )}
+                      <div className="text-2xl font-bold text-primary">
+                        ₹{(service.secondaryOfferPrice || service.offerPrice || 0).toLocaleString()}
+                      </div>
+                    </div>
+                    {(service.secondaryOriginalPrice || service.originalPrice || 0) > (service.secondaryOfferPrice || service.offerPrice || 0) && (
+                      <div className="text-sm font-semibold text-green-600 mb-1">
+                        Save {Math.round((((service.secondaryOriginalPrice || service.originalPrice || 0) - (service.secondaryOfferPrice || service.offerPrice || 0)) / (service.secondaryOriginalPrice || service.originalPrice || 1)) * 100)}%
+                      </div>
+                    )}
+                    <div className="text-sm text-muted-foreground">
+                      for {service.secondaryDuration || service.duration || "-"}
                     </div>
                   </div>
 
@@ -514,7 +539,7 @@ const PersonalTraining = () => {
           <div className="bg-background p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto">
             {/* Service Header - Compact */}
             <div className="text-center mb-4 pb-3 border-b border-border">
-              <h3 className="text-3xl font-bold">{detailsService.name || detailsService.title || "Personal Training Service"}</h3>
+              <h3 className="text-3xl font-bold">{detailsService.name || "Personal Training Service"}</h3>
             </div>
 
             {/* Description */}
@@ -836,7 +861,7 @@ const PersonalTraining = () => {
 
             {/* Trainer Selection */}
             <div className="mt-6">
-              <h5 className="font-medium text-foreground border-b pb-2 mb-4">Choose Your Trainer</h5>
+              <h5 className="font-medium text-foreground border-b pb-2 mb-4">Book consultation with</h5>
               <div className="grid md:grid-cols-2 gap-4">
                 <label className={`p-4 border rounded-lg cursor-pointer transition-all ${selectedTrainer === "anusha" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}>
                   <input

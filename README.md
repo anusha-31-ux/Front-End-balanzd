@@ -71,7 +71,7 @@ This project uses a Service Worker for caching and automatic updates. When deplo
 
 1. **Update the cache version** in `public/sw.js`:
    ```javascript
-   const CACHE_VERSION = 'balanzed-v1.0.2'; // Increment this version
+   const CACHE_VERSION = 'balanzed-v0.1.9'; // Increment this version
    ```
 
 2. **Deploy as usual** - the Service Worker will automatically:

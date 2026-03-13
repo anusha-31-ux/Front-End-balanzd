@@ -30,16 +30,23 @@ export const NeedHelpWidget = () => {
   const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}`;
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          className="fixed bottom-5 right-4 z-40 h-14 w-14 rounded-full bg-primary p-0 text-primary-foreground shadow-lg transition-transform hover:scale-105 hover:bg-primary/90 [&_svg]:!h-7 [&_svg]:!w-7 sm:bottom-6 sm:right-6"
-          aria-label="Need help"
-        >
-          <CircleHelp />
-        </Button>
-      </DialogTrigger>
+    <div className="fixed bottom-5 right-4 z-40 flex items-center gap-3 sm:bottom-6 sm:right-6">
+      {/* Help Bubble */}
+      <div className="hidden rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-lg sm:block">
+        Need help?
+        <div className="absolute -right-1 top-1/2 h-0 w-0 -translate-y-1/2 transform border-l-4 border-t-4 border-b-4 border-l-primary border-t-transparent border-b-transparent"></div>
+      </div>
+
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            className="h-14 w-14 rounded-full bg-primary p-0 text-primary-foreground shadow-lg transition-transform hover:scale-105 hover:bg-primary/90 [&_svg]:!h-7 [&_svg]:!w-7"
+            aria-label="Need help"
+          >
+            <CircleHelp />
+          </Button>
+        </DialogTrigger>
 
       <DialogContent className="max-w-sm [-webkit-text-size-adjust:100%]">
         <DialogHeader className="items-center text-center sm:text-center">
@@ -60,5 +67,6 @@ export const NeedHelpWidget = () => {
         </a>
       </DialogContent>
     </Dialog>
+    </div>
   );
 };

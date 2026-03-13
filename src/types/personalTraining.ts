@@ -9,6 +9,10 @@ export interface PersonalTraining {
   duration: string; // Duration of the service (e.g., "1 Month", "3 Months")
   originalPrice: number; // Original price before discount
   offerPrice: number; // Discounted price
+  secondaryName?: string; // Secondary package title (e.g., "Premium Package")
+  secondaryDuration?: string; // Duration of the secondary package
+  secondaryOriginalPrice?: number; // Original price for secondary package
+  secondaryOfferPrice?: number; // Discounted price for secondary package
   displayOrder: number; // Order to display services (1, 2, 3, 4...)
   description: string; // Detailed description of the service
   hasOffer: boolean; // Whether this service has an active offer
@@ -28,6 +32,10 @@ export interface CreatePersonalTrainingInput {
   duration: string;
   originalPrice: number;
   offerPrice: number;
+  secondaryName?: string;
+  secondaryDuration: string;
+  secondaryOriginalPrice: number;
+  secondaryOfferPrice: number;
   displayOrder: number;
   description: string;
   hasOffer: boolean;
@@ -45,6 +53,10 @@ export interface UpdatePersonalTrainingInput {
   duration?: string;
   originalPrice?: number;
   offerPrice?: number;
+  secondaryName?: string;
+  secondaryDuration?: string;
+  secondaryOriginalPrice?: number;
+  secondaryOfferPrice?: number;
   displayOrder?: number;
   description?: string;
   hasOffer?: boolean;

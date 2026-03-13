@@ -214,18 +214,18 @@ const Pricing = () => {
         {/* Section Header */}
         <div className="text-center mb-12">
           <span className="text-primary uppercase tracking-widest text-sm font-medium">
-            Membership Plans
+            Balanzed Basics
           </span>
           <h2 className="font-display text-4xl md:text-6xl text-foreground mt-4">
-            CHOOSE YOUR <span className="text-primary">PLAN</span>
+            Budget Friendly <span className="text-primary">Programs</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mt-4 flex items-center justify-center gap-2">
-            Flexible membership options to fit your goals and budget.
+          <p className="text-muted-foreground max-w-2xl mx-auto mt-4">
+            Flexible membership options to fit your goals and budget.{" "}
             <button
               onClick={() => setShowBasicsModal(true)}
-              className="text-primary font-semibold hover:underline transition-all"
+              className="text-primary font-semibold underline hover:underline transition-all"
             >
-              Know More
+              Click to know more
             </button>
           </p>
         </div>

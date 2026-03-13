@@ -2,7 +2,7 @@
 // Service Worker for caching and update management
 // IMPORTANT: Update CACHE_VERSION when deploying new versions to force cache invalidation
 // Example: Change 'balanzed-v0.1.0' to 'balanzed-v0.1.1' before deployment
-const CACHE_VERSION = 'balanzed-v0.1.1';
+const CACHE_VERSION = 'balanzed-v0.1.9';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 

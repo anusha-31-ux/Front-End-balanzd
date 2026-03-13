@@ -32,10 +32,10 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed left-0 right-0 z-40 transition-all duration-300 ${
+      className={`sticky top-0 z-40 transition-all duration-300 ${
         isScrolled
-          ? "top-0 bg-background/95 backdrop-blur-md shadow-lg shadow-primary/5"
-          : "top-12 bg-transparent"
+          ? "bg-background/95 backdrop-blur-md shadow-lg shadow-primary/5"
+          : "bg-transparent"
       }`}
     >
       <div className="container-custom mx-auto px-4 md:px-8">

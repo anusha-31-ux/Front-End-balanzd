@@ -251,6 +251,7 @@ export const endpoints = {
     razorpay: {
       transactions: '/api/razorpay/admin/transaction-list',
       exportTransactions: '/api/razorpay/admin/transactions/download',
+      summary: '/api/razorpay/admin/summary',
     },
     banner: {
       edit: '/api/editbanner',

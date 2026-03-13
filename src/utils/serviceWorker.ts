@@ -3,7 +3,7 @@ export class ServiceWorkerManager {
   private registration: ServiceWorkerRegistration | null = null;
   private updateAvailable = false;
   private updateCallbacks: ((registration: ServiceWorkerRegistration) => void)[] = [];
-  private currentVersion = 'balanzed-v0.1.1'; // Should match CACHE_VERSION in sw.js
+  private currentVersion = 'balanzed-v0.1.9'; // Should match CACHE_VERSION in sw.js
 
   constructor() {
     this.loadStoredVersion();
@@ -41,17 +41,10 @@ export class ServiceWorkerManager {
             newWorker.addEventListener('statechange', () => {
               console.log('Service Worker: Worker state changed to:', newWorker.state);
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('Service Worker: New version installed, checking if update needed...');
-                // Check if this is actually a new version
-                const storedVersion = localStorage.getItem('appVersion') || 'none';
-                if (storedVersion !== this.currentVersion) {
-                  console.log('Service Worker: New version detected, showing notification');
-                  // New version available
-                  this.updateAvailable = true;
-                  this.notifyUpdateAvailable();
-                } else {
-                  console.log('Service Worker: Version is same as stored, no update needed');
-                }
+                console.log('Service Worker: New version installed and ready, showing update notification');
+                // New version available - always show notification when new SW is installed
+                this.updateAvailable = true;
+                this.notifyUpdateAvailable();
               }
             });
           }

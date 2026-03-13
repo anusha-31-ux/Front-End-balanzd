@@ -59,6 +59,10 @@ export const PersonalTrainingManagement = () => {
     duration: "",
     originalPrice: 0,
     offerPrice: 0,
+    secondaryName: "Premium Package",
+    secondaryDuration: "",
+    secondaryOriginalPrice: 0,
+    secondaryOfferPrice: 0,
     displayOrder: 0,
     description: "",
     hasOffer: false,
@@ -81,6 +85,11 @@ export const PersonalTrainingManagement = () => {
       formData.originalPrice > 0 &&
       formData.offerPrice &&
       formData.offerPrice > 0 &&
+      formData.secondaryDuration &&
+      formData.secondaryOriginalPrice &&
+      formData.secondaryOriginalPrice > 0 &&
+      formData.secondaryOfferPrice &&
+      formData.secondaryOfferPrice > 0 &&
       formData.description &&
       formData.displayOrder !== undefined &&
       formData.displayOrder >= 0;
@@ -113,6 +122,10 @@ export const PersonalTrainingManagement = () => {
       duration: "",
       originalPrice: 0,
       offerPrice: 0,
+      secondaryName: "Premium Package",
+      secondaryDuration: "",
+      secondaryOriginalPrice: 0,
+      secondaryOfferPrice: 0,
       displayOrder: services.length + 1,
       description: "",
       hasOffer: false,
@@ -135,6 +148,10 @@ export const PersonalTrainingManagement = () => {
       duration: service.duration,
       originalPrice: service.originalPrice,
       offerPrice: service.offerPrice,
+      secondaryName: service.secondaryName || "Premium Package",
+      secondaryDuration: service.secondaryDuration || "",
+      secondaryOriginalPrice: service.secondaryOriginalPrice || 0,
+      secondaryOfferPrice: service.secondaryOfferPrice || 0,
       displayOrder: service.displayOrder,
       description: service.description,
       hasOffer: service.hasOffer,
@@ -359,6 +376,10 @@ export const PersonalTrainingManagement = () => {
                   <span className="font-semibold">₹{service.offerPrice}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">2nd Card Offer:</span>
+                  <span className="font-semibold">₹{service.secondaryOfferPrice || 0}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Display Order:</span>
                   <span className="font-semibold">{service.displayOrder}</span>
                 </div>
@@ -480,6 +501,75 @@ export const PersonalTrainingManagement = () => {
                       onBlur={() => setTouched({ ...touched, offerPrice: true })}
                       placeholder="e.g., 4000"
                       className={`mt-1 ${touched.offerPrice && (!formData.offerPrice || formData.offerPrice <= 0) ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    />
+                  </div>
+
+                  {/* Secondary Package Name */}
+                  <div>
+                    <Label htmlFor="secondaryName" className="text-sm">
+                      Secondary Package Name
+                    </Label>
+                    <Input
+                      id="secondaryName"
+                      value={formData.secondaryName || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, secondaryName: e.target.value })
+                      }
+                      placeholder="e.g., Premium Package"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Secondary Duration */}
+                  <div>
+                    <Label htmlFor="secondaryDuration" className="text-sm">
+                      Secondary Package Duration *
+                    </Label>
+                    <Input
+                      id="secondaryDuration"
+                      value={formData.secondaryDuration || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, secondaryDuration: e.target.value })
+                      }
+                      onBlur={() => setTouched({ ...touched, secondaryDuration: true })}
+                      placeholder="e.g., 6 Months"
+                      className={`mt-1 ${touched.secondaryDuration && !formData.secondaryDuration ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    />
+                  </div>
+
+                  {/* Secondary Original Price */}
+                  <div>
+                    <Label htmlFor="secondaryOriginalPrice" className="text-sm">
+                      Secondary Package Original Price (₹) *
+                    </Label>
+                    <Input
+                      id="secondaryOriginalPrice"
+                      type="number"
+                      value={formData.secondaryOriginalPrice || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, secondaryOriginalPrice: parseFloat(e.target.value) || 0 })
+                      }
+                      onBlur={() => setTouched({ ...touched, secondaryOriginalPrice: true })}
+                      placeholder="e.g., 19000"
+                      className={`mt-1 ${touched.secondaryOriginalPrice && (!formData.secondaryOriginalPrice || formData.secondaryOriginalPrice <= 0) ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    />
+                  </div>
+
+                  {/* Secondary Offer Price */}
+                  <div>
+                    <Label htmlFor="secondaryOfferPrice" className="text-sm">
+                      Secondary Package Offer Price (₹) *
+                    </Label>
+                    <Input
+                      id="secondaryOfferPrice"
+                      type="number"
+                      value={formData.secondaryOfferPrice || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, secondaryOfferPrice: parseFloat(e.target.value) || 0 })
+                      }
+                      onBlur={() => setTouched({ ...touched, secondaryOfferPrice: true })}
+                      placeholder="e.g., 15000"
+                      className={`mt-1 ${touched.secondaryOfferPrice && (!formData.secondaryOfferPrice || formData.secondaryOfferPrice <= 0) ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     />
                   </div>
 
@@ -618,7 +708,7 @@ export const PersonalTrainingManagement = () => {
                     </TooltipTrigger>
                     {!isFormValid && (
                       <TooltipContent className="bg-black text-white">
-                        <p>Please fill all required fields: Name, Duration, Original Price, Offer Price, Description, and Display Order</p>
+                        <p>Please fill all required fields: Name, Duration, Original Price, Offer Price, Secondary Package Duration, Secondary Package Original Price, Secondary Package Offer Price, Description, and Display Order</p>
                       </TooltipContent>
                     )}
                   </Tooltip>

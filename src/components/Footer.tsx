@@ -28,6 +28,7 @@ const Footer = () => {
     { label: "Strength Training", href: "#programs" },
     { label: "Yoga Sessions", href: "#programs" },
     { label: "Live Workouts", href: "#programs" },
+    { label: "Personal Training", href: "#personal-training" },
   ];
 
   const policies = [
@@ -89,28 +90,12 @@ const Footer = () => {
       ),
     },
     {
-      id: "prize",
-      label: "Prize Challenge Policy",
-      title: "Prize Challenge Policy",
-      content: (
-        <div className="space-y-4">
-          <h3 className="text-xl font-display text-foreground">Consistency Challenge Policy</h3>
-          <ul className="list-disc pl-6 space-y-4 text-muted-foreground">
-            <li>Cash prizes are applicable only for 6-month plan participants.</li>
-            <li>Winners are selected based on consistency, participation, discipline, lab report and overall engagement.</li>
-            <li>Decisions taken by BALANZED team regarding challenge results are final.</li>
-            <li>This challenge is meant to motivate healthy habits, not extreme physical transformation.</li>
-          </ul>
-        </div>
-      ),
-    },
-    {
       id: "program",
       label: "Program Policy",
       title: "Program Policy",
       content: (
         <ul className="list-disc pl-6 space-y-4 text-muted-foreground">
-          <li>This is a live group workout program conducted online.</li>
+          <li>This is a live group workout program and personal training program conducted online.</li>
           <li>Participants must consult a doctor before joining if they have any medical condition.</li>
           <li>BALANZED is not responsible for injuries caused due to improper form or non-adherence to guidance.</li>
           <li>Participants must inform trainers about existing health issues before starting.</li>

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useSSEUpdates } from "@/hooks/useSSEUpdates";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PageLoader from "./components/PageLoader";
@@ -40,6 +41,9 @@ const AdminPromoBanner = lazy(() => import("./admin/pages/PromoBanner"));
 
 const queryClient = new QueryClient();
 
+/** Opens the SSE connection for the lifetime of the app */
+const SSEConnector = () => { useSSEUpdates(); return null; };
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -48,6 +52,7 @@ const App = () => (
         richColors
         closeButton/>
       <BrowserRouter>
+        <SSEConnector />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />

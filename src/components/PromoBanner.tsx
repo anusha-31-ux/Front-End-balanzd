@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Gift } from "lucide-react";
 import { bannerService, Banner } from "@/services/api";
+import { DATA_UPDATE_EVENT } from "@/hooks/useSSEUpdates";
 
 /**
  * Promo Banner Component
@@ -11,22 +12,30 @@ const PromoBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchBanner = async () => {
-      try {
-        const bannerData = await bannerService.get();
-        setBanner(bannerData);
-        setIsVisible(bannerData?.isVisible ?? false);
-      } catch (error) {
-        console.error("Failed to fetch banner:", error);
-        // Fallback to not showing banner if API fails
-        setIsVisible(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBanner = async () => {
+    try {
+      const bannerData = await bannerService.get();
+      setBanner(bannerData);
+      setIsVisible(bannerData?.isVisible ?? false);
+    } catch (error) {
+      console.error("Failed to fetch banner:", error);
+      setIsVisible(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBanner();
+  }, []);
+
+  // Refetch when admin updates banner via SSE
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === 'banner') fetchBanner();
+    };
+    window.addEventListener(DATA_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(DATA_UPDATE_EVENT, handler);
   }, []);
 
   if (loading || !isVisible || !banner) return null;

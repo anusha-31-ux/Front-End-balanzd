@@ -3,6 +3,7 @@ import { Check, Trophy, Clock, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
+import { DATA_UPDATE_EVENT } from "@/hooks/useSSEUpdates";
 import { pricingService } from "@/services/pricingService";
 import { PricingPlan } from "@/types/pricing";
 import {
@@ -61,6 +62,15 @@ const Pricing = () => {
   // Load plans on component mount
   useEffect(() => {
     loadPlans();
+  }, []);
+
+  // Refetch when admin updates pricing via SSE
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === 'pricing') loadPlans();
+    };
+    window.addEventListener(DATA_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(DATA_UPDATE_EVENT, handler);
   }, []);
 
   // Reset form when modal closes

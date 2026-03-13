@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { testimonialService } from "@/services/testimonialService";
 import { Testimonial } from "@/types/testimonial";
+import { DATA_UPDATE_EVENT } from "@/hooks/useSSEUpdates";
 
 // Format ISO date or "YYYY-MM" → "March 2025"
 const formatMonthYear = (val: string) => {
@@ -20,12 +21,25 @@ const Testimonials = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadTestimonials = () => {
     testimonialService
       .getAllPublic()
       .then((data) => setTestimonials(data))
       .catch((err) => console.error("Failed to load testimonials:", err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadTestimonials();
+  }, []);
+
+  // Refetch when admin updates testimonials via SSE
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === 'testimonials') loadTestimonials();
+    };
+    window.addEventListener(DATA_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(DATA_UPDATE_EVENT, handler);
   }, []);
 
   const total = testimonials.length;

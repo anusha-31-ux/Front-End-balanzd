@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { personalTrainingService } from "@/services/personalTrainingService";
 import type { PersonalTraining } from "@/types/personalTraining";
 import { useRazorpay } from "@/hooks/useRazorpay";
+import { DATA_UPDATE_EVENT } from "@/hooks/useSSEUpdates";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,15 @@ const PersonalTraining = () => {
   // Load services on component mount
   useEffect(() => {
     loadServices();
+  }, []);
+
+  // Refetch when admin updates personal training services via SSE
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === 'personal-training') loadServices();
+    };
+    window.addEventListener(DATA_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(DATA_UPDATE_EVENT, handler);
   }, []);
 
   // Reset form when modal closes

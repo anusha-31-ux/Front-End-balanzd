@@ -1,140 +1,78 @@
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ChevronDown, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { useState, useRef } from "react";
 
-// const slides = [
-//   {
-//     image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1920&q=80",
-//   },
-//   {
-//     image: "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=1920&q=80",
-//   },
-//   {
-//     image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1920&q=80",
-//   }
-// ];
-const slides = [
-  {
-    image: "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=1920&q=90&auto=format&fit=crop", // Bright yoga on white/light background
-  },
-  {
-    image: "https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=1920&q=90&auto=format&fit=crop", // Light meditation peaceful
-  },
-  {
-    image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1920&q=90&auto=format&fit=crop", // Bright home workout stretching
-  }
-];
-const bulletPoints = [
-  "Live workout sessions — Monday to Friday",
-  "10 daily batches | 6 AM – 12 PM & 4 PM – 8 PM",
-  "Strength Training: Mon, Wed, Fri",
-  "Yoga: Tue & Thu",
-  "Join any batch as per your schedule"
-];
+const videoUrl = "https://balanzedspaces.sgp1.cdn.digitaloceanspaces.com/videos/balanzed_intro_vid.mp4";
 
 /**
  * Hero Section Component
- * Full-screen hero with banner slider for BALANZED
+ * Full-screen hero with background video for BALANZED
  */
 const Hero = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(!isMuted);
+    }
+  };
 
-  const goToSlide = (index: number) => setCurrentSlide(index);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative bg-black overflow-hidden pt-20 md:min-h-screen md:flex md:items-center md:justify-center"
     >
-      {/* Slider Background */}
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${
-            index === currentSlide ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ backgroundImage: `url(${slide.image})` }}
+      {/* Background Video */}
+      <video
+        ref={videoRef}
+        className="w-full h-auto object-contain md:absolute md:inset-0 md:h-full md:object-contain"
+        autoPlay
+        loop
+        muted={isMuted}
+        playsInline
+        controls={false}
+      >
+        <source src={videoUrl} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+
+      {/* Control Buttons */}
+      <div className="absolute bottom-4 right-4 z-20 flex gap-2 md:gap-3 md:bottom-20">
+        {/* Play/Pause Button */}
+        <button
+          onClick={togglePlay}
+          className="p-2 md:p-3 bg-background/80 hover:bg-background border border-primary/30 rounded-full text-primary hover:text-primary/80 transition-all duration-300"
+          aria-label={isPlaying ? "Pause video" : "Play video"}
         >
-          {/* Overlay gradient */}
-          {/* <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /> */}
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-        </div>
-      ))}
+          {isPlaying ? <Pause size={16} className="md:w-5 md:h-5" /> : <Play size={16} className="md:w-5 md:h-5" />}
+        </button>
 
-      {/* Content */}
-      <div className="relative z-10 container-custom mx-auto px-4 md:px-8 pt-20">
-        <div className="max-w-4xl">
-          {/* Badge */}
-
-          {/* Main Headline in Kannada */}
-          <h1 className="font-display text-3xl md:text-5xl lg:text-6xl text-foreground leading-tight mb-4 animate-fade-up stagger-1">
-            ನಮ್ಮ ಗುರಿ — ಕರ್ನಾಟಕದ ಪ್ರತಿಯೊಬ್ಬರೂ{" "}
-            <span className="text-primary neon-glow">ಆರೋಗ್ಯವಾಗಿರುವುದು</span>
-          </h1>
-
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8 animate-fade-up stagger-2">
-            Daily LIVE workout sessions in Kannada — simple, safe and beginner-friendly.
-          </p>
-
-          {/* Bullet Points */}
-          <ul className="space-y-3 mb-8 animate-fade-up stagger-3">
-            {bulletPoints.map((point, index) => (
-              <li key={index} className="flex items-center gap-3 text-foreground">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-base md:text-lg">{point}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* CTA Button */}
-          {/* <div className="animate-fade-up stagger-4">
-            <Button variant="hero" size="xl">
-              Join Now!
-            </Button>
-          </div> */}
-        </div>
-      </div>
-
-      {/* Slider Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/30 hover:bg-primary/20 border border-primary/30 rounded-full text-primary transition-all duration-300"
-      >
-        <ChevronLeft size={24} />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/30 hover:bg-primary/20 border border-primary/30 rounded-full text-primary transition-all duration-300"
-      >
-        <ChevronRight size={24} />
-      </button>
-
-      {/* Slider Dots */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex gap-3">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide
-                ? "bg-primary w-8"
-                : "bg-muted-foreground/50 hover:bg-primary/50"
-            }`}
-          />
-        ))}
+        {/* Mute Button */}
+        <button
+          onClick={toggleMute}
+          className="p-2 md:p-3 bg-background/80 hover:bg-background border border-primary/30 rounded-full text-primary hover:text-primary/80 transition-all duration-300"
+          aria-label={isMuted ? "Unmute video" : "Mute video"}
+        >
+          {isMuted ? <VolumeX size={16} className="md:w-5 md:h-5" /> : <Volume2 size={16} className="md:w-5 md:h-5" />}
+        </button>
       </div>
 
       {/* Scroll Indicator */}

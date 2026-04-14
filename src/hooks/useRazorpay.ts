@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { api, endpoints } from "@/lib/apiHandler";
 import { toast } from "sonner";
 
 declare global {
@@ -14,9 +14,30 @@ export interface PaymentParams {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  instagramId:string;
-  health:string;
-  goal:string;
+  instagramId: string;
+  age: string;
+  gender: string;
+  weight: string;
+  height: string;
+  healthConcerns: string;
+  injuries: string;
+  foodAllergies: string;
+  dietExperience: string;
+  fitnessGoals: string;
+  selectedTrainer: string;
+  health: string;
+  goal: string;
+}
+
+export interface RazorpayOrderResponse {
+  success: boolean;
+  message: string;
+  data: {
+    orderId: string;
+    amount: number;
+    currency: string;
+    keyId: string;
+  };
 }
 
 const loadRazorpayScript = () => {
@@ -47,6 +68,16 @@ export const useRazorpay = () => {
     customerEmail,
     customerPhone,
     instagramId,
+    age,
+    gender,
+    weight,
+    height,
+    healthConcerns,
+    injuries,
+    foodAllergies,
+    dietExperience,
+    fitnessGoals,
+    selectedTrainer,
     health,
     goal
   }: PaymentParams) => {
@@ -61,19 +92,29 @@ export const useRazorpay = () => {
       }
 
       // ✅ Create order
-      const { data } = await axios.post(
-        "https://balanzd-api.onrender.com/api/payments/create-order",
-        {
-          amount,
-          planName,
-          customerName,
-          customerEmail,
-          customerPhone,
-          instagramId,
-          health,
-          goal
-        }
-      );
+      const response: RazorpayOrderResponse = await api.post(endpoints.public.razorpay.createOrder, {
+        amount,
+        planName,
+        customerName,
+        customerEmail,
+        customerPhone,
+        instagramId,
+        age,
+        gender,
+        weight,
+        height,
+        healthConcerns,
+        injuries,
+        foodAllergies,
+        dietExperience,
+        fitnessGoals,
+        selectedTrainer,
+        health,
+        goal
+      });
+
+      // Extract order data from response
+      const data = response.data;
 
       // ✅ Open Razorpay Checkout
       const razorpay = new window.Razorpay({
@@ -87,9 +128,6 @@ export const useRazorpay = () => {
           name: customerName,
           email: customerEmail,
           contact: customerPhone,
-          instagramId: instagramId,
-          health : health,
-          goal: goal,
         },
         theme: {
           color: "#E53935",

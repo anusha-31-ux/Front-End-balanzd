@@ -1,138 +1,212 @@
 import { Button } from "@/components/ui/button";
-import { Check, Trophy, Clock, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Check, Trophy, Clock, Sparkles, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useRazorpay, PaymentParams } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
-
+import { DATA_UPDATE_EVENT } from "@/hooks/useSSEUpdates";
+import { pricingService } from "@/services/pricingService";
+import { PricingPlan } from "@/types/pricing";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * Pricing Section Component
- * Displays membership plans with tab navigation and collects user info for Razorpay
+ * Displays membership plans dynamically from the pricing service
+ * Admin can edit plans from the admin panel, changes reflect automatically here
  */
 const Pricing = () => {
-  const [activeTab, setActiveTab] = useState<"1month" | "3months" | "6months">("6months");
-  const { initiatePayment, isLoading } = useRazorpay();
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay();
 
   // User input state
   const [showModal, setShowModal] = useState(false);
+  const [showBasicsModal, setShowBasicsModal] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [instagramId, setInstagramId] = useState("");
-  const [health , setHealth ] = useState("");
-  const [goal , setGoal ] = useState("");
-   
+  const [health, setHealth] = useState("");
+  const [goal, setGoal] = useState<string[]>([]);
 
+  // Refund policy dialog state
+  const [showRefundPolicy, setShowRefundPolicy] = useState(false);
+  const [refundPolicyAcknowledged, setRefundPolicyAcknowledged] = useState(false);
+  
+  // Track touched fields for validation display
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  
+  const goalOptions = [
+    "Weight Loss",
+    "Fat Loss",
+    "Muscle Gain",
+    "Strength",
+    "Endurance",
+    "Flexibility",
+    "Mobility",
+    "General Fitness",
+    "Body Recomposition",
+  ];
 
-  const plans = {
-    "6months": {
-      duration: "6 Months",
-      badge: "BEST VALUE",
-      showPrize: true,
-      prizeText: "Eligible for ₹3,00,000 Cash Prize*",
-      prizeNote: "(*Details mentioned in Challenge Policy)",
-      actualPrice: "₹4,194",
-      offerPrice: "₹2,949",
-      amount: 2949,
-      offerText: "January Launch Offer",
-      offerValidity: "Offer valid till 31st January",
-      features: [
-        "Daily LIVE Workout Sessions",
-        "10 Flexible Batches Daily (Morning & Evening)",
-        "Strength Training (Mon, Wed, Fri)",
-        "Yoga Sessions (Tue, Thu)",
-        "Completely Home-Based Workouts",
-        "Beginner Friendly – All Levels Welcome",
-        "Balanced Nutrition Guidance",
-        "Easy Cooking & Recipe Videos",
-        "Educational Health Talks & Workshops",
-        "Community Support & Accountability",
-        "Access to Private Balanzed Community Page",
-        "Habit-Building Focus (not just weight loss)",
-      ],
-      tagline: "Best plan for long-term lifestyle change & consistency.",
-    },
-    "3months": {
-      duration: "3 Months",
-      badge: null,
-      showPrize: false,
-      prizeText: "",
-      prizeNote: "",
-      actualPrice: "₹2,097",
-      offerPrice: "₹1,533",
-      amount: 1533,
-      offerText: "January Launch Offer",
-      offerValidity: "Offer valid till 31st January",
-      features: [
-        "Daily LIVE Workout Sessions",
-        "10 Flexible Batches Daily",
-        "Strength Training & Yoga Sessions",
-        "Home-Based, Beginner Friendly Workouts",
-        "Balanced Nutrition Guidance",
-        "Easy Cooking & Recipe Videos",
-        "Educational Health Talks",
-        "Community Support",
-        "Access to Private Community Page",
-      ],
-      tagline: "Ideal for building consistency & seeing visible lifestyle improvement.",
-    },
-    "1month": {
-      duration: "1 Month",
-      badge: null,
-      showPrize: false,
-      prizeText: "",
-      prizeNote: "",
-      actualPrice: "₹699",
-      offerPrice: "₹589",
-      amount: 589,
-      offerText: "January Launch Offer",
-      offerValidity: "Offer valid till 31st January",
-      features: [
-        "Daily LIVE Workout Sessions",
-        "10 Flexible Batches Daily",
-        "Strength Training & Yoga Sessions",
-        "Home-Based Beginner Friendly Workouts",
-        "Basic Nutrition Guidance",
-        "Community Support",
-        "Access to Private Community Page",
-      ],
-      tagline: "Perfect for beginners to start their fitness journey.",
-    },
+  // Load plans on component mount
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  // Refetch when admin updates pricing via SSE
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === 'pricing') loadPlans();
+    };
+    window.addEventListener(DATA_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(DATA_UPDATE_EVENT, handler);
+  }, []);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!showModal) {
+      setCustomerName("");
+      setCustomerEmail("");
+      setCustomerPhone("");
+      setInstagramId("");
+      setHealth("");
+      setGoal([]);
+      setRefundPolicyAcknowledged(false);
+      setTouchedFields({});
+    }
+  }, [showModal]);
+
+  // Validation helper
+  const isFormValid = (): boolean => {
+    return (
+      customerName.trim() !== "" &&
+      customerEmail.trim() !== "" &&
+      customerPhone.trim().length === 10 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) &&
+      instagramId.trim() !== "" &&
+      health.trim() !== "" &&
+      goal.length > 0 &&
+      refundPolicyAcknowledged
+    );
   };
 
-  const currentPlan = plans[activeTab];
+  const isFieldEmpty = (value: string): boolean => value.trim() === "";
+  const isFieldTouched = (field: string): boolean => touchedFields[field] ?? false;
+  const getFieldBorderClass = (field: string, value: string): string => {
+    if (!isFieldTouched(field)) return "";
+    return isFieldEmpty(value) ? "border-red-500" : "";
+  };
 
-  // Open modal to collect user info
-  const handleJoinNow = () => setShowModal(true);
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+  };
+
+  /**
+   * Load pricing plans from the service
+   */
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const data = await pricingService.getPlans();
+      if (data.length > 0) {
+        setPlans(data);
+      } else {
+        toast.info("No pricing plans available at the moment");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to load pricing plans";
+      toast.error(errorMessage);
+      console.error("Error loading pricing plans:", error);
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle plan selection - open modal with selected plan
+  const handleSelectPlan = (plan: PricingPlan) => {
+    setSelectedPlan(plan);
+    setShowModal(true);
+  };
 
   // Confirm payment after collecting user info
   const handleConfirmPayment = () => {
-    if (!customerName || !customerEmail || !customerPhone || !instagramId || !health || !goal) {
+    if (
+      !customerName ||
+      !customerEmail ||
+      !customerPhone ||
+      !instagramId ||
+      !health ||
+      !goal.length
+    ) {
       toast.info("Please fill all fields before proceeding to payment");
       return;
     }
 
+    if (!refundPolicyAcknowledged) {
+      toast.info("Please acknowledge the refund policy before proceeding");
+      return;
+    }
+
+    if (!selectedPlan) return;
+
     const paymentData: PaymentParams = {
-      amount: currentPlan.amount,
-      planName: `${currentPlan.duration} LIVE FITNESS PROGRAM`,
+      amount: selectedPlan.offerPrice,
+      planName: `${selectedPlan.duration} LIVE FITNESS PROGRAM`,
       customerName,
       customerEmail,
       customerPhone,
       instagramId,
       health,
-      goal,
+      goal: goal.join(", "),
     };
 
     initiatePayment(paymentData);
-    // ✅ Reset form after modal
+    // Reset form after modal
     setCustomerName("");
     setCustomerEmail("");
     setCustomerPhone("");
     setInstagramId("");
     setHealth("");
-    setGoal("");
+    setGoal([]);
+    setRefundPolicyAcknowledged(false);
     setShowModal(false);
+    setSelectedPlan(null);
   };
+
+  const isFormReady = isFormValid();
+  const isSubmitDisabled = isPaymentLoading || !isFormReady;
+
+  if (loading) {
+    return (
+      <section id="pricing" className="section-padding bg-secondary/30">
+        <div className="container-custom mx-auto text-center">
+          <p className="text-muted-foreground">Loading pricing plans...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (plans.length === 0) {
+    return (
+      <section id="pricing" className="section-padding bg-secondary/30">
+        <div className="container-custom mx-auto text-center">
+          <p className="text-muted-foreground">No pricing plans available</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="pricing" className="section-padding bg-secondary/30">
@@ -140,210 +214,379 @@ const Pricing = () => {
         {/* Section Header */}
         <div className="text-center mb-12">
           <span className="text-primary uppercase tracking-widest text-sm font-medium">
-            Membership Plans
+            Balanzed Basics
           </span>
           <h2 className="font-display text-4xl md:text-6xl text-foreground mt-4">
-            CHOOSE YOUR <span className="text-primary">PLAN</span>
+            Budget Friendly <span className="text-primary">Programs</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mt-4">
-            Flexible membership options to fit your goals and budget.
+            Flexible membership options to fit your goals and budget.{" "}
+            <button
+              onClick={() => setShowBasicsModal(true)}
+              className="text-primary font-semibold underline hover:underline transition-all"
+            >
+              Click to know more
+            </button>
           </p>
         </div>
 
-        {/* Pricing Card */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
-            {/* Tab Navigation */}
-            {/* <div className="flex justify-center gap-2 p-4 bg-secondary/50 border-b border-border">
-              {["1month", "3months", "6months"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as "1month" | "3months" | "6months")}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${
-                    activeTab === tab
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "bg-background text-foreground border border-border hover:border-primary"
-                  }`}
-                >
-                  {plans[tab as "1month" | "3months" | "6months"].duration}
-                  {currentPlan.badge && tab === "6months" && (
-                    <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                      BEST
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div> */}
-            <div className="flex justify-center gap-2 p-4 bg-secondary/50 border-b border-border">
-  {(["1month", "3months", "6months"] as const).map((tab) => {
-    const plan = plans[tab];
-
-    return (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`relative px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${
-          activeTab === tab
-            ? "bg-primary text-primary-foreground shadow-lg"
-            : "bg-background text-foreground border border-border hover:border-primary"
-        }`}
-      >
-        {plan.duration}
-
-        {/* ✅ BEST badge */}
-        {plan.badge && tab === "6months" && (
-          <span className="absolute -top-2 -right-2 animate-bounce bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-  BEST
-</span>
-
-        )}
-      </button>
-    );
-  })}
-</div>
-
-            {/* Plan Content */}
-            <div className="p-6 sm:p-8">
-              {/* Plan Title */}
-              <div className="text-center mb-6">
-                <h3 className="font-display text-2xl sm:text-3xl text-foreground mb-2">
-                  {currentPlan.duration} LIVE FITNESS PROGRAM
-                </h3>
-                {currentPlan.badge && (
-                  <span className="inline-block bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-semibold">
-                    {currentPlan.badge}
-                  </span>
-                )}
-              </div>
-
-              {/* Prize Section */}
-              {currentPlan.showPrize && (
-                <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Trophy className="w-5 h-5 text-primary" />
-                    <span className="text-foreground font-bold text-lg">{currentPlan.prizeText}</span>
+        {/* Pricing Cards Grid - Select Plan */}
+        <div className="flex flex-wrap justify-center gap-6">
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className="bg-card border-2 rounded-2xl overflow-visible shadow-lg transition-all duration-300 hover:border-primary/70 hover:shadow-2xl hover:scale-105 flex flex-col relative w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[300px]"
+            >
+              {/* Badge at Top - Outside the Card */}
+              {plan.badge && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <div className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider py-1.5 px-4 rounded-full whitespace-nowrap shadow-md">
+                    {plan.badge}
                   </div>
-                  <p className="text-muted-foreground text-sm">{currentPlan.prizeNote}</p>
                 </div>
               )}
+              
+              <div className="p-5 flex flex-col flex-1">
+                {/* Plan Header */}
+                <div className="text-center font-bold">
+                  <h3 className="font-display text-xl sm:text-2xl text-foreground mb-2">
+                    {plan.duration}
+                  </h3>
+                </div>
 
-              {/* Pricing */}
-              <div className="text-center mb-6">
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <span className="text-muted-foreground line-through text-xl">
-                    {currentPlan.actualPrice}
-                  </span>
-                  <span className="font-display text-4xl sm:text-5xl text-primary">
-                    {currentPlan.offerPrice}
-                  </span>
+                {/* Pricing */}
+                <div className="text-center mb-4">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <span className="text-muted-foreground line-through text-sm">
+                      ₹{plan.actualPrice}
+                    </span>
+                    <span className="font-display text-3xl text-primary font-semibold">
+                      ₹{plan.offerPrice}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 text-primary text-xs mb-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span className="font-semibold">{plan.offerText}</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
+                    <Clock className="w-3 h-3" />
+                    <span>⏳ {plan.offerValidity}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-center gap-2 text-primary">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="font-semibold">{currentPlan.offerText}</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-muted-foreground mt-2">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">⏳ {currentPlan.offerValidity}</span>
-                </div>
+
+                {/* Select Button */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => handleSelectPlan(plan)}
+                >
+                  Choose Plan
+                </Button>
               </div>
-
-              {/* Features */}
-              <div className="mb-6">
-                <h4 className="text-foreground font-semibold mb-4">What you get:</h4>
-                <ul className="space-y-3">
-                  {currentPlan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Tagline */}
-              <p className="text-center text-foreground font-medium mb-6 bg-secondary/50 rounded-lg py-3 px-4">
-                👉 {currentPlan.tagline}
-              </p>
-
-              {/* CTA */}
-              <Button
-                variant="hero"
-                size="lg"
-                className="w-full text-lg py-6"
-                onClick={handleJoinNow}
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : "Join Now"}
-              </Button>
             </div>
-          </div>
+          ))}
         </div>
       </div>
 
+      {/* BALANZED Basics Modal */}
+      <Dialog open={showBasicsModal} onOpenChange={setShowBasicsModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-center">
+              BALANZED Basics (Budget-Friendly Program)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4 text-foreground">
+            <p className="text-muted-foreground">
+              A structured program designed to help you build consistency, learn the fundamentals of fitness, and create sustainable results from home.
+            </p>
+            
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Daily Live Workouts with Flexible Timings</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Morning: 6:00 AM – 12:00 PM<br />
+                  Evening: 4:00 PM – 8:00 PM
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Workout Structure</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Monday, Wednesday, Friday – Strength Training<br />
+                  Tuesday, Thursday – Yoga & Mobility
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Complete Home Workout Program</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Designed for all fitness levels — no gym required.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• BALANZED Tracker</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Track your workouts, habits, and progress to help you stay consistent and move closer to your goals.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Community Support Page</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Ask questions, clear doubts, and stay motivated with guidance from our team and the BALANZED community.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Education-Based Approach</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Short education videos to help you understand the basics of fitness and nutrition.
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">• Learn → Execute → Improve System</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  Understand the fundamentals, apply them in your routine, and gradually improve your results.
+                </p>
+              </div>
+            </div>
+            
+            <hr className="border-border" />
+            
+            <div className="bg-secondary/30 p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground italic">
+                Thousands of people struggle with fitness because they lack structure and consistency.
+                BALANZED Basics is designed to give you exactly that — a simple system you can follow every day to finally see progress.
+              </p>
+              <p className="text-sm font-semibold text-foreground mt-2">
+                All you need to do is start and stay consistent.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* User Info Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-background p-6 rounded-xl w-[90%] max-w-md">
-            <h3 className="text-xl font-bold text-center mb-4">Enter Your Details</h3>
+      {showModal && selectedPlan && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-black border p-6 rounded-xl w-[95%] max-w-2xl h-fit max-h-[calc(100vh-2rem)] overflow-y-auto">
+            {/* Selected Plan Header */}
+            <div className="text-center mb-4 pb-4 border-b border-yellow-600">
+              <h3 className="text-2xl font-bold text-white">{selectedPlan.duration} Plan</h3>
+              {selectedPlan.badge && (
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-yellow-600 text-black mt-2">
+                  {selectedPlan.badge}
+                </span>
+              )}
+              <div className="flex items-center justify-center gap-3 mt-3">
+                <p className="text-gray-400 text-sm line-through">
+                  ₹{selectedPlan.actualPrice}
+                </p>
+                <p className="text-yellow-400 font-semibold text-2xl">
+                  ₹{selectedPlan.offerPrice}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-1 text-yellow-400 text-xs mb-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span className="font-semibold">{selectedPlan.offerText}</span>
+                  </div>
+            </div>
+
+            <h4 className="text-lg font-semibold text-center mb-4 text-white">Enter Your Details</h4>
             <input
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-              placeholder="Name"
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${ getFieldBorderClass("name", customerName)}`}
+              placeholder="Name *"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              onBlur={() => handleFieldBlur("name")}
+              required
             />
-                   <input
-  type="tel"
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-  placeholder="WhatsApp Number"
-  value={customerPhone}
-  onChange={(e) => setCustomerPhone(e.target.value)}
-  maxLength={10}             
-  pattern="[0-9]{10}"        
-  title="Please enter a valid 10-digit mobile number"
-/>
             <input
-              className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-              placeholder="Email Address"
+              type="tel"
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("phone", customerPhone)}`}
+              placeholder="WhatsApp Number (10 digits) *"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value.slice(0, 10).replace(/\D/g, ""))}
+              onBlur={() => handleFieldBlur("phone")}
+              maxLength={10}
+              pattern="[0-9]{10}"
+              title="Please enter a valid 10-digit mobile number"
+              required
+            />
+            <input
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("email", customerEmail)}`}
+              placeholder="Email Address *"
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
+              onBlur={() => handleFieldBlur("email")}
+              required
             />
-    
-<input
-  type="text"
-  placeholder="Instagram ID"
-  value={instagramId}
-  onChange={(e) => setInstagramId(e.target.value)}
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-/>
-<input
-  type="text"
-  placeholder="Health Issues If Any"
-  value={health}
-  onChange={(e) => setHealth(e.target.value)}
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-/>
-<input
-  type="text"
-  placeholder="Fitness Goal"
-  value={goal}
-  onChange={(e) => setGoal(e.target.value)}
-  className="w-full mb-3 p-2 border border-gray-300 rounded text-black"
-/>
+            <input
+              type="text"
+              placeholder="Instagram ID *"
+              value={instagramId}
+              onChange={(e) => setInstagramId(e.target.value)}
+              onBlur={() => handleFieldBlur("instagram")}
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("instagram", instagramId)}`}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Health Issues If Any *"
+              value={health}
+              onChange={(e) => setHealth(e.target.value)}
+              onBlur={() => handleFieldBlur("health")}
+              className={`w-full mb-3 px-3 py-2 bg-black border-2 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/50 ${getFieldBorderClass("health", health)}`}
+              required
+            />
+            <div className={`mb-3 p-3 bg-black border-2 rounded ${getFieldBorderClass("goal", goal.length > 0 ? "selected" : "")}`}>
+              <label className="block text-white mb-2">Fitness Goal * (Select multiple)</label>
+              <div className="grid grid-cols-3 gap-2">
+                {goalOptions.map((option) => (
+                  <label key={option} className="flex items-center gap-2 text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={goal.includes(option)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setGoal([...goal, option]);
+                        } else {
+                          setGoal(goal.filter(g => g !== option));
+                        }
+                      }}
+                      onBlur={() => handleFieldBlur("goal")}
+                      className="bg-black border rounded accent-yellow-500 cursor-pointer"
+                    />
+                    <span className="text-sm">{option}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
+            {/* Refund Policy Acknowledgment */}
+            <div className="mb-4">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={refundPolicyAcknowledged}
+                  onChange={(e) => setRefundPolicyAcknowledged(e.target.checked)}
+                  className="mt-1 bg-black border rounded accent-yellow-500 cursor-pointer"
+                />
+                <span className="text-gray-300">
+                  I acknowledge that all purchases are{" "}
+                  <button
+                    type="button"
+                    onClick={() => setShowRefundPolicy(true)}
+                    className="text-yellow-400 hover:underline font-medium"
+                  >
+                    non-refundable
+                  </button>{" "}
+                  as per the refund policy.
+                </span>
+              </label>
+            </div>
 
-
-            <div className="flex gap-3 mt-4">
-              <Button variant="outline" className="w-full" onClick={() => setShowModal(false)}>
+            <div className="flex flex-col gap-3 mt-4 sm:flex-row">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowModal(false)}
+                disabled={isPaymentLoading}
+              >
                 Cancel
               </Button>
-              <Button className="w-full" onClick={handleConfirmPayment}>
-                Proceed to Pay
-              </Button>
+              {!isFormReady ? (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="w-full">
+                        <Button
+                          className="w-full"
+                          onClick={handleConfirmPayment}
+                          disabled={isSubmitDisabled}
+                        >
+                          {isPaymentLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            "Proceed to Pay"
+                          )}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black text-white">
+                      <p>Fill all required fields and accept the refund policy.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={handleConfirmPayment}
+                  disabled={isPaymentLoading}
+                >
+                  {isPaymentLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Proceed to Pay"
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      {/* Payment Processing Overlay */}
+      {isPaymentLoading && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60]">
+          <div className="bg-background p-8 rounded-xl text-center shadow-2xl">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Processing Payment</h3>
+            <p className="text-muted-foreground text-sm">
+              Please wait while we prepare your payment...
+            </p>
+            <p className="text-muted-foreground text-xs mt-2">
+              Do not close this window
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Refund Policy Dialog */}
+      <Dialog open={showRefundPolicy} onOpenChange={setShowRefundPolicy}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Refund Policy</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <p className="text-lg font-semibold text-foreground">
+              All purchases made on BALANZED are non-refundable.
+            </p>
+            <p className="text-muted-foreground">
+              Once a program is activated, refunds will not be provided under any circumstances, including:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+              <li>Change of mind</li>
+              <li>Schedule issues</li>
+              <li>Non-attendance of sessions</li>
+            </ul>
+            <p className="text-muted-foreground">
+              In case of genuine technical issues from our side that prevent access to sessions, users may contact our support team for resolution.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

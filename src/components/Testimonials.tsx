@@ -1,55 +1,69 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { testimonialService } from "@/services/testimonialService";
+import { Testimonial } from "@/types/testimonial";
+import { DATA_UPDATE_EVENT } from "@/hooks/useSSEUpdates";
 
-// Import testimonial images
-import testimonial1 from "@/assets/testimonial-1.jpg";
-import testimonial2 from "@/assets/testimonial-2.jpg";
-import testimonial3 from "@/assets/testimonial-3.jpg";
-import testimonial4 from "@/assets/testimonial-4.png";
-import testimonial5 from "@/assets/testimonial-5.jpg";
-import testimonial6 from "@/assets/testimonial-6.jpg";
-import testimonial7 from "@/assets/testimonial-7.jpg";
-import testimonial8 from "@/assets/testimonial-8.jpg";
-import testimonial9 from "@/assets/testimonial-9.jpg";
-import testimonial10 from "@/assets/testimonial-10.jpg";
+// Format ISO date or "YYYY-MM" → "March 2025"
+const formatMonthYear = (val: string) => {
+  if (!val) return "";
+  const short = val.slice(0, 7); // "YYYY-MM"
+  const [year, month] = short.split("-");
+  return new Date(Number(year), Number(month) - 1).toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+  });
+};
 
-/**
- * Testimonials Section Component
- * Displays client transformation photos with slider
- */
 const Testimonials = () => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const transformations = [
-    { image: testimonial1, before: "92kg", after: "77kg", loss: "15kg" },
-    { image: testimonial2, before: "60kg", after: "52kg", loss: "8kg" },
-    { image: testimonial3, before: "71kg", after: "64kg", loss: "7kg" },
-    { image: testimonial4, before: "75kg", after: "65kg", loss: "10kg" },
-    { image: testimonial5, before: "70kg", after: "59kg", loss: "11kg" },
-    { image: testimonial6, before: "61kg", after: "55kg", loss: "6kg" },
-    { image: testimonial7, before: "95kg", after: "88kg", loss: "7kg" },
-    { image: testimonial8, before: "73kg", after: "59kg", loss: "14kg" },
-    { image: testimonial9, before: "53kg", after: "49kg", loss: "4kg" },
-    { image: testimonial10, before: "74kg", after: "70kg", loss: "4kg" },
-  ];
-
-  const totalSlides = transformations.length;
-
-  // Auto-slide every 5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % totalSlides);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [totalSlides]);
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+  const loadTestimonials = () => {
+    testimonialService
+      .getAllPublic()
+      .then((data) => setTestimonials(data))
+      .catch((err) => console.error("Failed to load testimonials:", err))
+      .finally(() => setLoading(false));
   };
 
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % totalSlides);
+  useEffect(() => {
+    loadTestimonials();
+  }, []);
+
+  // Refetch when admin updates testimonials via SSE
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === 'testimonials') loadTestimonials();
+    };
+    window.addEventListener(DATA_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(DATA_UPDATE_EVENT, handler);
+  }, []);
+
+  const total = testimonials.length;
+
+  useEffect(() => {
+    if (total === 0) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % total);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [total]);
+
+  const goToPrevious = () => setCurrentIndex((prev) => (prev - 1 + total) % total);
+  const goToNext = () => setCurrentIndex((prev) => (prev + 1) % total);
+
+  const current = testimonials[currentIndex];
+
+  // Build period string e.g. "March 2025 – March 2026"
+  const getPeriod = (t: Testimonial) => {
+    if (!t.period_start && !t.period_end) return null;
+    const start = t.period_start ? formatMonthYear(t.period_start) : "";
+    const end = t.period_end ? formatMonthYear(t.period_end) : "";
+    if (start && end) return `${start} – ${end}`;
+    return start || end;
   };
 
   return (
@@ -68,60 +82,83 @@ const Testimonials = () => {
           </p>
         </div>
 
-        {/* Transformations Slider */}
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-8 md:px-16">
-          {/* Main Slider */}
-          <div className="relative overflow-hidden rounded-2xl">
-            <div className="transition-opacity duration-500">
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : total === 0 ? (
+          <p className="text-center text-muted-foreground py-10">No testimonials available yet.</p>
+        ) : (
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-8 md:px-16">
+            {/* Main Slide */}
+            <div className="relative overflow-hidden rounded-2xl">
               <div className="animate-fade-in">
                 <div className="relative bg-background rounded-xl overflow-hidden border border-border shadow-lg">
                   <img
-                    src={transformations[currentIndex].image}
-                    alt={`Transformation: ${transformations[currentIndex].before} to ${transformations[currentIndex].after}`}
-                   className="w-full max-h-[500px] sm:max-h-[600px] md:max-h-[700px] object-contain"
+                    src={current.photoUrl}
+                    alt={current.weight_change}
+                    className="w-full max-h-[500px] sm:max-h-[600px] md:max-h-[700px] object-contain"
                   />
-                  {/* Weight Loss Badge */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-6 py-2 rounded-full font-bold text-base md:text-lg shadow-lg">
-                    Lost {transformations[currentIndex].loss}!
+
+                  {/* Overlay badges */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 w-full px-4">
+                    {/* Weight change — yellow/primary badge */}
+                    <div className="bg-primary text-primary-foreground px-6 py-2 rounded-full font-bold text-base md:text-lg shadow-lg whitespace-nowrap">
+                      {current.weight_change}
+                    </div>
+
+                    {/* Period range */}
+                    {getPeriod(current) && (
+                      <div className="bg-black/70 text-white px-4 py-1 rounded-full text-sm shadow whitespace-nowrap">
+                        {getPeriod(current)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Navigation Arrows */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToPrevious}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-14 bg-background border-primary/30 hover:bg-primary hover:text-primary-foreground z-10"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-14 bg-background border-primary/30 hover:bg-primary hover:text-primary-foreground z-10"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+            {/* Description below image */}
+            {current.description && (
+              <p className="text-center text-muted-foreground mt-6 max-w-xl mx-auto text-sm">
+                "{current.description}"
+              </p>
+            )}
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: totalSlides }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? "bg-primary w-8"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                }`}
-              />
-            ))}
+            {/* Navigation */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={goToPrevious}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-14 bg-background border-primary/30 hover:bg-primary hover:text-primary-foreground z-10"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={goToNext}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-14 bg-background border-primary/30 hover:bg-primary hover:text-primary-foreground z-10"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-2 mt-8">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentIndex
+                      ? "bg-primary w-8"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

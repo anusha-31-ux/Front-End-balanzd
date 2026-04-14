@@ -56,4 +56,37 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Deployment Instructions
+
+### Building for Production
+
+```sh
+# Build the project
+npm run build
+```
+
+### Service Worker Cache Updates
+
+This project uses a Service Worker for caching and automatic updates. When deploying new versions:
+
+1. **Update the cache version** in `public/sw.js`:
+   ```javascript
+   const CACHE_VERSION = 'balanzed-v0.1.9'; // Increment this version
+   ```
+
+2. **Deploy as usual** - the Service Worker will automatically:
+   - Detect the new version
+   - Show an update notification to users
+   - Clear old caches and load fresh content
+
+### Environment Configuration
+
+- **Development**: Uses `.env.development` and `.env`
+- **Production**: Uses `.env.production`
+- Make sure `VITE_ENCRYPT_API=true` in production for API encryption
+
+### User Experience
+
+Users will see an update notification banner when a new version is deployed, even if they have the site open in their browser. They can choose to refresh immediately or later.
+
 
